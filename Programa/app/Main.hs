@@ -1,16 +1,15 @@
 module Main where
 
-import Utils.CSV
+import UI.Menu
+import Core.Motor
 import Services.GeneradorEventos
+import Utils.CSV
 
 main :: IO ()
 main = do
     let ruta = "data/eventos.csv"
 
+    mostrarBienvenida
+
     eventosExistentes <- leerEventosSeguro ruta
-
-    nuevosEventos <- generarEventos eventosExistentes
-
-    mapM_ (agregarEventoSeguro ruta) nuevosEventos
-
-    putStrLn "Eventos generados y guardados"
+    cicloMenu ruta eventosExistentes
