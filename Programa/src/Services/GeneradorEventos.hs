@@ -116,19 +116,19 @@ usuariosConId =
 -- Salidas: IO [Evento].
 -- Validaciones: Calcula cantidad de eventos entre 10 y 25 según tamaño del sistema.
 generarEventos :: [Evento] -> IO [Evento]
-
 generarEventos eventosExistentes = do
     fechaBase <- obtenerFechaActual
 
     let idBase = obtenerUltimoId eventosExistentes
-
         base = length eventosExistentes
 
-        cantidadElementosCreados = 10 + (base `div` 5) `mod` 16-- Esto genera un número entre 10 y 25 basado en la cantidad de eventos existentes, aumentando  a medida que el sistema crece.
+        cantidadElementosCreados = 10 + (base `div` 5) `mod` 16
+        
+        cantidadFinal = limitar cantidadElementosCreados
 
-        cantidadFinal = limitar cantidadElementosCreados -- Asegura que la cantidad esté entre 10 y 25.
+        indices = [base + 1 .. base + cantidadFinal]
 
-    return (map (crearEventoDesde idBase fechaBase) [1..cantidadFinal])
+    return (map (crearEventoDesde idBase fechaBase) indices)
 
 -- =========================
 -- CREAR EVENTO

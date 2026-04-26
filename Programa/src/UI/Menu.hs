@@ -8,11 +8,9 @@ module UI.Menu where
 -- Validaciones: Ninguna, es únicamente presentación visual.
 mostrarBienvenida :: IO ()
 mostrarBienvenida = do
+    putStrLn ""
     putStrLn "========================================"
-    putStrLn "      SISTEMA DE EVENTOS v1.0"
-    putStrLn "========================================"
-    putStrLn "   Bienvenido al sistema principal"
-    putStrLn "   Analítica y gestión de eventos"
+    putStrLn "      SISTEMA DE EVENTOS "
     putStrLn "========================================"
     putStrLn ""
 
