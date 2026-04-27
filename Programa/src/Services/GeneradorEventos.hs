@@ -93,8 +93,7 @@ generarFecha fechaBase indice =
 -- Validaciones: IDs generados de forma secuencial.
 productosConId :: [(String, Producto)]
 
-productosConId =
-    zip (map (\i -> "P" ++ show (200 + i)) [0..length productos - 1]) productos --zip hace id y producto juntos osea como una tupla de pares, ejemplo: [("P200", "Laptop"), ("P201", "Celular"), etc.]
+productosConId = zip (map (\i -> "P" ++ show (200 + i)) [0..length productos - 1]) productos --zip hace id y producto juntos osea como una tupla de pares, ejemplo: [("P200", "Laptop"), ("P201", "Celular"), etc.]
 
 -- Nombre: usuariosConId
 -- Descripción: Genera lista de usuarios del sistema con IDs únicos.
@@ -103,8 +102,7 @@ productosConId =
 -- Validaciones: Genera 300 usuarios consecutivos.
 usuariosConId :: [String]
 
-usuariosConId =
-    map (\i -> "U" ++ show (300 + i)) [0..299]
+usuariosConId = map (\i -> "U" ++ show (300 + i)) [0..299]
 
 -- =========================
 -- GENERADOR PRINCIPAL
@@ -123,7 +121,7 @@ generarEventos eventosExistentes = do
         base = length eventosExistentes
 
         cantidadElementosCreados = 10 + (base `div` 5) `mod` 16
-        
+
         cantidadFinal = limitar cantidadElementosCreados
 
         indices = [base + 1 .. base + cantidadFinal]
@@ -143,7 +141,7 @@ crearEventoDesde :: Int -> Day -> Int -> Evento
 
 crearEventoDesde idBase fechaBase indice =
 
-    let idGenerado = idBase + indice
+    let idGenerado = indice - 1
 
         categoriaEvento = categorias !! (indice `mod` length categorias)
 
@@ -178,33 +176,8 @@ crearEventoDesde idBase fechaBase indice =
         cantidadEvento
         metodoEvento
         estadoEvento
-        (calcularImpuesto categoriaEvento valorEvento)
-
-
--- Nombre: calcularImpuesto
--- Descripción: Calcula el impuesto aplicado a un evento.
--- Entradas: Categoria, Float valor.
--- Salidas: Float impuesto calculado.
--- Validaciones: Solo aplica 13% si la categoría es Compra.
-calcularImpuesto :: Categoria -> Float -> Float
-
-calcularImpuesto categoriaEvento valorEvento =
-
-    if categoriaEvento == Compra-- Solo las compras tienen impuesto, el resto no.
-
-        then redondear (valorEvento * 0.13)
-
-        else 0
-
--- Nombre: redondear
--- Descripción: Redondea un número a 2 decimales.
--- Entradas: Float.
--- Salidas: Float redondeado.
--- Validaciones: No valida rango del número.
-redondear :: Float -> Float
-
-redondear n = fromIntegral (round (n * 100)) / 100
-
+        0
+        False
 
 -- Nombre: obtenerUltimoId
 -- Descripción: Obtiene el ID más alto de la lista de eventos.

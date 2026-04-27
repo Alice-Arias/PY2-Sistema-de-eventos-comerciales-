@@ -9,8 +9,8 @@ import Data.Maybe (catMaybes)
 import Types.Evento
 import System.IO
 import System.Directory (doesFileExist)
-import Control.Exception
-
+import Control.Exception (try, IOException)
+import System.IO.Error ()
 
 -- Nombre: validarEvento
 -- Descripción: Verifica que los datos de un evento sean válidos.
@@ -31,19 +31,19 @@ validarEvento evento
 -- Salidas: String en formato CSV.
 -- Validaciones: No valida datos, solo convierte. Se asume que el evento ya es válido.
 eventoToCSV :: Evento -> String
-eventoToCSV e =
-    show (idEvento e) ++ "," ++
-    show (categoria e) ++ "," ++
-    show (valor e) ++ "," ++
-    show (timestamp e) ++ "," ++
-    show (usuarioId e) ++ "," ++
-    show (productoId e) ++ "," ++
-    show (producto e) ++ "," ++
-    show (cantidad e) ++ "," ++
-    show (metodoPago e) ++ "," ++
-    show (estado e) ++ "," ++
-    show (impuesto e)
-
+eventoToCSV evento =
+    show (idEvento evento) ++ "," ++
+    show (categoria evento) ++ "," ++
+    show (valor evento) ++ "," ++
+    show (timestamp evento) ++ "," ++
+    show (usuarioId evento) ++ "," ++
+    show (productoId evento) ++ "," ++
+    show (producto evento) ++ "," ++
+    show (cantidad evento) ++ "," ++
+    show (metodoPago evento) ++ "," ++
+    show (estado evento) ++ "," ++
+    show (impuesto evento) ++ "," ++
+    show (etiqueta evento)
 
 -- Nombre: existeEvento
 -- Descripción: Verifica si un evento ya existe en una lista por su ID.
@@ -51,7 +51,8 @@ eventoToCSV e =
 -- Salidas: Bool (True si existe).
 -- Validaciones: Compara solo por idEvento, no valida otros campos ni consistencia.
 existeEvento :: Int -> [Evento] -> Bool
-existeEvento idBuscar = any (\e -> idEvento e == idBuscar)
+
+existeEvento idBuscado = any (\evento -> idEvento evento == idBuscado)
 
 
 -- Nombre: agregarEventoSeguro
@@ -59,21 +60,26 @@ existeEvento idBuscar = any (\e -> idEvento e == idBuscar)
 -- Entradas: Ruta del archivo (FilePath), Evento.
 -- Salidas: IO () con mensaje en consola.
 -- Validaciones: Verifica duplicados por ID, valida campos del evento, maneja errores de archivo. Solo agrega si el evento es válido y no existe.
-agregarEventoSeguro :: FilePath -> Evento -> IO ()
-agregarEventoSeguro ruta evento = do
-    eventos <- leerEventosSeguro ruta
-    
-    if existeEvento (idEvento evento) eventos
-        then putStrLn "Error: evento duplicado"
-        else
-            case validarEvento evento of
-                Left errorMsg -> putStrLn ("Error: " ++ errorMsg)
-                Right e -> do
-                    resultado <- try (appendFile ruta (eventoToCSV e ++ "\n")) :: IO (Either IOException ())
-                    case resultado of
-                        Left _ -> putStrLn "Error al guardar el archivo"
-                        Right _ -> putStrLn "Evento guardado correctamente"
+agregarEventoSeguro rutaArchivo nuevoEvento = do
 
+    eventosExistentes <- leerEventosSeguro rutaArchivo
+
+    if existeEvento (idEvento nuevoEvento) eventosExistentes
+
+        then putStrLn "Error: evento duplicado"
+
+        else case validarEvento nuevoEvento of
+
+            Left err -> putStrLn ("Error: " ++ err)
+
+            Right eventoValido -> do
+
+                resultado <- try (appendFile rutaArchivo (eventoToCSV eventoValido ++ "\n"))
+                    :: IO (Either IOException ())
+                    
+                case resultado of
+                    Left _ -> putStrLn "Error al guardar el archivo"
+                    Right _ -> return ()
 
 -- Nombre: split
 -- Descripción: Divide un texto usando un separador.
@@ -82,21 +88,26 @@ agregarEventoSeguro ruta evento = do
 -- Validaciones: No valida contenido, solo divide. Si el separador no está, devuelve la lista con el texto completo.
 split :: Char -> String -> [String]
 split _ [] = []
+
 split separador texto =
-    let (parte, resto) = break (== separador) texto
-    in parte : case resto of
-        [] -> []
-        (_:restoSinSeparador) -> split separador restoSinSeparador
+    let (parteAntes, restoTexto) = break (== separador) texto
+
+        listaRestante =
+            if null restoTexto
+                then []
+                else split separador (tail restoTexto)
+
+    in parteAntes : listaRestante
 
 -- Nombre: csvToEventoSeguro
 -- Descripción: Convierte una línea CSV a Evento si es válida.
 -- Entradas: String (línea CSV).
 -- Salidas: Maybe Evento.
--- Validaciones: Verifica que tenga 11 campos, que los tipos sean correctos. Devuelve Nothing si no es válido, Just Evento si es correcto. No valida valores específicos, solo formato y tipos.
+-- Validaciones: Verifica que tenga 12 campos, que los tipos sean correctos. Devuelve Nothing si no es válido, Just Evento si es correcto. No valida valores específicos, solo formato y tipos.
 csvToEventoSeguro :: String -> Maybe Evento
 csvToEventoSeguro lineaCSV =
     let campos = split ',' lineaCSV
-    in if length campos /= 11
+    in if length campos /= 12
         then Nothing
         else Just (Evento
             (read (head campos))           -- idEvento
@@ -105,11 +116,12 @@ csvToEventoSeguro lineaCSV =
             (read (campos !! 3))           -- timestamp
             (read (campos !! 4))           -- usuarioId
             (read (campos !! 5))           -- productoId
-            (campos !! 6)                  -- producto
+            (read (campos !! 6))                  -- producto
             (read (campos !! 7))           -- cantidad
             (read (campos !! 8))           -- metodoPago
             (read (campos !! 9))           -- estado
             (read (campos !! 10))          -- impuesto
+            (read (campos !! 11))          -- etiqueta
         )
 
 -- NOMBRE: leerEventosSeguro
@@ -118,12 +130,23 @@ csvToEventoSeguro lineaCSV =
 -- Salidas: IO [Evento]
 -- Validaciones: Si el archivo no existe devuelve lista vacía. Ignora líneas inválidas. Solo devuelve eventos que se puedan convertir correctamente. No valida valores específicos, solo formato y tipos.
 leerEventosSeguro :: FilePath -> IO [Evento]
-leerEventosSeguro ruta = do
-    existe <- doesFileExist ruta
-    if not existe
+leerEventosSeguro rutaArchivo = do
+
+    archivoExiste <- doesFileExist rutaArchivo
+
+    if not archivoExiste
         then return []
-    else do
-        contenido <- readFile ruta
-        let lineas = lines contenido
-        let eventos = map csvToEventoSeguro lineas
-        return (catMaybes eventos)
+        else do
+            contenido <- readFile rutaArchivo
+            let lineas = lines contenido
+            let eventosParseados = map csvToEventoSeguro lineas
+            return (catMaybes eventosParseados)
+
+
+-- Nombre: guardarEventos
+-- Descripción: Guarda una lista de eventos en un archivo CSV, sobrescribiendo el contenido existente.
+-- Entradas: Ruta del archivo (FilePath), lista de eventos.
+-- Salidas: IO () con mensaje en consola.
+-- Validaciones: Maneja errores de archivo. Solo guarda eventos válidos. Si el archivo
+guardarEventos :: FilePath -> [Evento] -> IO ()
+guardarEventos rutaArchivo eventos = writeFile rutaArchivo (unlines (map eventoToCSV eventos))

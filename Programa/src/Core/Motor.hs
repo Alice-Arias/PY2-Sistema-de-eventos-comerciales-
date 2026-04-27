@@ -4,6 +4,7 @@ import UI.Menu
 import Services.GeneradorEventos
 import Types.Evento
 import Utils.CSV
+import UI.MenuTransformacion (menuTransformacion)
 
 -- =========================
 -- CICLO PRINCIPAL
@@ -31,37 +32,61 @@ manejar ruta op eventos =
 
         "1" -> do
             eventosActualizados <- actualizarSistema ruta eventos
-            putStrLn "Eventos transformados"
-            cicloMenu ruta eventosActualizados
+
+            eventosTransformados <- menuTransformacion eventosActualizados
+
+            guardarEventos ruta eventosTransformados
+
+            cicloMenu ruta eventosTransformados
 
         "2" -> do
             eventosActualizados <- actualizarSistema ruta eventos
-            putStrLn "Analizando datos..."
+            putStrLn "=================================="
+            putStrLn "    ANÁLISIS DE DATOS           "
+            putStrLn "=================================="
+            putStrLn ""
             cicloMenu ruta eventosActualizados
 
 
         "3" -> do
             eventosActualizados <- actualizarSistema ruta eventos
-            putStrLn "Analizando comportamiento temporal..."
+            putStrLn "=================================="
+            putStrLn "    ANÁLISIS TEMPORAL           "
+            putStrLn "=================================="
+            putStrLn ""
             cicloMenu ruta eventosActualizados
 
 
         "4" -> do
             eventosActualizados <- actualizarSistema ruta eventos
-            putStrLn "Ejecutando búsqueda..."
+            putStrLn "=================================="
+            putStrLn "    BÚSQUEDA DE EVENTOS           "
+            putStrLn "=================================="
+            putStrLn ""
             cicloMenu ruta eventosActualizados
 
 
         "5" -> do
             eventosActualizados <- actualizarSistema ruta eventos
-            putStrLn "Generando estadísticas..."
+            putStrLn "=================================="
+            putStrLn "    GENERACIÓN DE ESTADÍSTICAS     "
+            putStrLn "=================================="
+            putStrLn ""
             cicloMenu ruta eventosActualizados
 
 
-        "6" -> putStrLn "Saliendo del sistema..."
+        "6" -> do 
+            putStrLn "=================================="
+            putStrLn "    SALIENDO DEL SISTEMA        "
+            putStrLn "=================================="
+            putStrLn ""
+            return ()
 
         _ -> do
-            putStrLn "Opción inválida"
+            putStrLn "=================================="
+            putStrLn "    OPCIÓN INVÁLIDA              "
+            putStrLn "=================================="
+            putStrLn ""
             cicloMenu ruta eventos
 
 -- Nombre: actualizarSistema
@@ -72,8 +97,16 @@ manejar ruta op eventos =
 actualizarSistema :: FilePath -> [Evento] -> IO [Evento]
 actualizarSistema ruta eventos = do
     nuevos <- generarEventos eventos
-    mapM_ (agregarEventoSeguro ruta) nuevos
 
-    putStrLn ("Se agregaron " ++ show (length nuevos) ++ " nuevos eventos al sistema.")
+    mapM_ (agregarEventoSeguro ruta) nuevos --mapM_ es para aplicar la función a cada elemento de la lista sin preocuparse por el resultado
+
+    let cantidad = length nuevos
+
+    putStrLn "===================================="
+    putStrLn "        ACTUALIZACIÓN SISTEMA       "
+    putStrLn "===================================="
+    putStrLn (" Eventos agregados: " ++ show cantidad)
+    putStrLn "===================================="
+    putStrLn ""
 
     leerEventosSeguro ruta

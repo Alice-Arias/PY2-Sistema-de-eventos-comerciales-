@@ -30,7 +30,7 @@ import Types.Producto
 --  metodoPago: forma de pago utilizada (Tarjeta, Efectivo, Sinpe)
 --  estado: estado del proceso del evento (Pendiente, Completado, Cancelado)
 --  impuesto: impuesto calculado según la categoría del evento
-
+--  etiqueta: indicador de si el evento es de alto valor
 -- Salida: Un valor del tipo Evento completamente construido.
 -- Validaciones: Se asume que los tipos son correctos.
 -- No valida reglas de negocio complejas como consistencia entre campos o valores negativos.
@@ -46,4 +46,5 @@ data Evento = Evento
     , metodoPago :: MetodoPago
     , estado :: Estado
     , impuesto :: Float
+    , etiqueta :: Bool
     } deriving (Show, Read, Eq)
