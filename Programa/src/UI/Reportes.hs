@@ -7,6 +7,12 @@ import Core.Impuestos
 import Core.Etiquetas
 import Utils.Calculos
 import Core.Promedios
+import Utils.Formato (formatearMonto)
+import Utils.Colores
+
+-- =========================
+-- REPORTE IMPUESTOS
+-- =========================
 
 reporteImpuestos :: [Evento] -> IO ()
 reporteImpuestos eventos = do
@@ -15,18 +21,22 @@ reporteImpuestos eventos = do
 
         totalEventos = length eventos
         totalCompra = length (filter (\e -> categoria e == Compra) eventos)
+        totalImpuestos = length (filter (\e -> categoria e == Compra && impuesto e > 0) eventosConTotal)
 
-        totalImpuestos =length (filter (\e -> categoria e == Compra && impuesto e > 0) eventosConTotal)
+    putStrLn (titulo "\n══════════════════════════════════════")
+    putStrLn (subtitulo "        REPORTE DE IMPUESTOS")
+    putStrLn (titulo "══════════════════════════════════════")
 
-        promedio = promedioCompras eventosConTotal
+    putStrLn (texto ("Total eventos   : " ++ show totalEventos))
+    putStrLn (texto ("Compras         : " ++ show totalCompra))
+    putStrLn (okMsg ("Con impuesto    : " ++ show totalImpuestos))
 
-    putStrLn "===== REPORTE IMPUESTOS ====="
-    putStrLn ("Total eventos: " ++ show totalEventos)
-    putStrLn ("Compras: " ++ show totalCompra)
-    putStrLn ("Con impuesto: " ++ show totalImpuestos)
+    putStrLn (titulo "══════════════════════════════════════")
 
-    putStrLn "==============================="
 
+-- =========================
+-- REPORTE ETIQUETAS
+-- =========================
 
 reporteEtiquetas :: [Evento] -> IO ()
 reporteEtiquetas eventos = do
@@ -34,31 +44,70 @@ reporteEtiquetas eventos = do
     let eventosEtiqueta = etiquetarAltoValor eventos
         categorias = nub (map categoria eventos)
         promedios = calcularPromedios eventos
+
         totalGeneral = length eventos
         totalSobrePromedio = length (filter etiqueta eventosEtiqueta)
 
-    putStrLn "================= REPORTE ETIQUETAS ================="
-    putStrLn ("Total de eventos: " ++ show totalGeneral)
-    putStrLn ("Total sobre promedio: " ++ show totalSobrePromedio)
+    putStrLn (titulo "\n════════════════════════════════════════")
+    putStrLn (subtitulo "        REPORTE DE ETIQUETAS")
+    putStrLn (titulo "════════════════════════════════════════")
+
+    putStrLn (texto ("Total eventos      : " ++ show totalGeneral))
+    putStrLn (okMsg ("Sobre promedio     : " ++ show totalSobrePromedio))
     putStrLn ""
 
-    mapM_ (\cat ->
+    putStrLn (colorBold magenta
+        (ajustarTexto "Categoría" 15 ++ " | "
+      ++ ajustarTexto "Total" 7 ++ " | "
+      ++ ajustarTexto "Promedio" 18 ++ " | "
+      ++ "Sobre"))
 
+    putStrLn (separador (replicate 65 '-'))
+
+    mapM_ (\cat ->
         let eventosCat = filter (\e -> categoria e == cat) eventosEtiqueta
             cantidadTotal = length eventosCat
             sobrePromedio = length (filter etiqueta eventosCat)
             promedio = obtenerPromedio cat promedios
 
-        in putStrLn (
-            show cat ++
-            " | Total: " ++ show cantidadTotal ++
-            " | Promedio: " ++ show promedio ++
-            " | Sobre promedio: " ++ show sobrePromedio
-        )
+        in putStrLn (texto (
+            ajustarTexto (show cat) 15 ++ " | "
+         ++ ajustarNumero cantidadTotal 7 ++ " | "
+         ++ ajustarTexto (formatearMonto promedio) 18 ++ " | "
+         ++ ajustarNumero sobrePromedio 6
+        ))
 
         ) categorias
 
-    putStrLn "================================================"
+    putStrLn (titulo "════════════════════════════════════════")
+
+
+-- =========================
+-- REPORTE COMPLETO
+-- =========================
+
+reporteCompleto :: [Evento] -> IO ()
+reporteCompleto eventos = do
+
+    let eventosFinales = actualizarTotales eventos
+
+        totalImp = length (filter (\e -> categoria e == Compra && impuesto e > 0) eventosFinales)
+        totalEti = length (filter etiqueta eventosFinales)
+
+    putStrLn (titulo "\n══════════════════════════════════════")
+    putStrLn (subtitulo "        REPORTE COMPLETO")
+    putStrLn (titulo "══════════════════════════════════════")
+
+    putStrLn (texto ("Eventos         : " ++ show (length eventosFinales)))
+    putStrLn (okMsg ("Impuestos       : " ++ show totalImp))
+    putStrLn (okMsg ("Sobre promedio  : " ++ show totalEti))
+
+    putStrLn (titulo "══════════════════════════════════════")
+
+
+-- =========================
+-- AUXILIARES
+-- =========================
 
 obtenerPromedio :: Categoria -> [(Categoria, Float)] -> Float
 obtenerPromedio cat lista =
@@ -66,17 +115,11 @@ obtenerPromedio cat lista =
         Just p  -> p
         Nothing -> 0
 
-reporteCompleto :: [Evento] -> IO ()
-reporteCompleto eventos = do
-    let eventosFinales = actualizarTotales eventos
+ajustarTexto :: String -> Int -> String
+ajustarTexto txt ancho =
+    take ancho (txt ++ repeat ' ')
 
-        totalImp = length (filter (\e -> categoria e == Compra && impuesto e > 0) eventosFinales)
-        totalEti = length (filter etiqueta eventosFinales)
-
-        promedio = promedioCompras eventosFinales
-
-    putStrLn "===== REPORTE COMPLETO ====="
-    putStrLn ("Eventos: " ++ show (length eventosFinales))
-    putStrLn ("Impuestos: " ++ show totalImp)
-    putStrLn ("Sobre promedio: " ++ show totalEti)
-    putStrLn "==============================="
+ajustarNumero :: Int -> Int -> String
+ajustarNumero n ancho =
+    let txt = show n
+    in replicate (ancho - length txt) ' ' ++ txt
