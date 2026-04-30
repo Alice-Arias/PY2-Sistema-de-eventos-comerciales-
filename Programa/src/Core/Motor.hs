@@ -5,6 +5,7 @@ import Services.GeneradorEventos
 import Types.Evento
 import Utils.CSV
 import UI.MenuTransformacion (menuTransformacion)
+import UI.MenuAnalisisTemporal
 
 -- =========================
 -- CICLO PRINCIPAL
@@ -50,10 +51,9 @@ manejar ruta op eventos =
 
         "3" -> do
             eventosActualizados <- actualizarSistema ruta eventos
-            putStrLn "=================================="
-            putStrLn "    ANÁLISIS TEMPORAL           "
-            putStrLn "=================================="
-            putStrLn ""
+
+            menuAnalisisTemporal ruta eventosActualizados
+
             cicloMenu ruta eventosActualizados
 
 
