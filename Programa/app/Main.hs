@@ -7,9 +7,11 @@ import Utils.CSV
 
 main :: IO ()
 main = do
+
     let ruta = "data/eventos.csv"
 
     mostrarBienvenida
 
     eventosExistentes <- leerEventosSeguro ruta
+    
     cicloMenu ruta eventosExistentes

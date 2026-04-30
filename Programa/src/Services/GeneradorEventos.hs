@@ -7,184 +7,137 @@ import Types.MetodoPago
 import Types.Estado
 import Types.Producto
 
--- =========================
--- BASE DE DATOS PARA GENERAR
--- =========================
-
--- Nombre: categorias
--- Descripción: Lista de categorías disponibles para clasificar los eventos del sistema.
--- Entradas: No recibe parámetros.
--- Salidas: Lista de valores del tipo Categoria.
--- Validaciones: Solo contiene valores definidos en el tipo Categoria.
 categorias :: [Categoria]
 categorias = [Visualizacion, Apartado, Compra, Devolucion, Seguimiento]
 
--- Nombre: metodos
--- Descripción: Lista de métodos de pago disponibles en el sistema.
--- Entradas: No recibe parámetros.
--- Salidas: Lista de valores del tipo MetodoPago.
--- Validaciones: Solo contiene valores válidos definidos en MetodoPago.
-metodos :: [MetodoPago]
-metodos = [Tarjeta, Sinpe, Efectivo]
+metodosPago :: [MetodoPago]
+metodosPago = [Tarjeta, Sinpe, Efectivo]
 
--- Nombre: estados
--- Descripción: Lista de estados posibles para un evento.
--- Entradas: No recibe parámetros.
--- Salidas: Lista de valores del tipo Estado.
--- Validaciones: Solo contiene estados definidos en el sistema.
-estados :: [Estado]
-estados = [Pendiente, Completado, Cancelado]
+estadosEvento :: [Estado]
+estadosEvento = [Pendiente, Completado, Cancelado]
 
--- Nombre: productos
--- Descripción: Lista de productos disponibles en el sistema.
--- Entradas: No recibe parámetros.
--- Salidas: Lista de productos tipo String.
--- Validaciones: Contiene únicamente productos válidos.
 productos :: [Producto]
 productos =
     [ "Laptop", "Celular", "Tablet", "Audifonos", "Teclado", "Mouse"
     , "Monitor", "Impresora", "Camara", "Consola", "Smartwatch"
     , "Bocina", "Microfono", "Router", "DiscoDuro", "SSD"
-    , "USB", "Cargador", "Proyector", "TV"
-    ]
+    , "USB", "Cargador", "Proyector", "TV", "Silla Gamer"]
 
-
--- Nombre: limitar
--- Descripción: Ajusta la cantidad de eventos a generar dentro de un rango permitido.
--- Entradas: Int n (cantidad solicitada).
--- Salidas: Int ajustado entre 10 y 25.
--- Validaciones: Si n < 10 devuelve 10, si n > 25 devuelve 25, si está en rango lo mantiene.
-limitar :: Int -> Int
-
-limitar n
+limitarCantidad :: Int -> Int
+limitarCantidad n
     | n < 10 = 10
     | n > 25 = 25
     | otherwise = n
 
 
--- Nombre: obtenerFechaActual
--- Descripción: Obtiene la fecha actual del sistema.
--- Entradas: No recibe parámetros.
--- Salidas: IO Day con la fecha actual.
--- Validaciones: Depende del sistema operativo.
 obtenerFechaActual :: IO Day
-
 obtenerFechaActual = utctDay <$> getCurrentTime
 
--- Nombre: generarFecha
--- Descripción: Genera una fecha a partir de una fecha base y un índice.
--- Entradas: Day fechaBase, Int indice.
--- Salidas: Int en formato YYYYMMDD.
--- Validaciones: Genera fechas dentro de un rango aproximado de 2 años.
-generarFecha :: Day -> Int -> Int
+generarFechaEvento :: Day -> Int -> IO Int
+generarFechaEvento fechaBase indice = do
+    tiempoActual <- getCurrentTime
 
-generarFecha fechaBase indice =
+    let
+        segundos = floor (utctDayTime tiempoActual * 1000) :: Int -- Obtener milisegundos para generar ruido
+        ruido = segundos `mod` 997
+        desplazamiento =(indice * 41 + indice * indice + ruido * 17) `mod` 730
+        nuevaFecha = addDays (fromIntegral desplazamiento) fechaBase
+        (anio, mes, dia) = toGregorian nuevaFecha
 
-    let fechaNueva = addDays (fromIntegral (indice `mod` 730)) fechaBase
-        (anio, mes, dia) = toGregorian fechaNueva
-
-    in fromIntegral anio * 10000 + mes * 100 + dia
+    return (fromIntegral anio * 10000 + mes * 100 + dia)
 
 
--- Nombre: productosConId
--- Descripción: Asocia cada producto con un identificador único.
--- Entradas: No recibe parámetros.
--- Salidas: Lista de tuplas (String, Producto).
--- Validaciones: IDs generados de forma secuencial.
-productosConId :: [(String, Producto)]
+productosConCodigo :: [(String, Producto)]
+productosConCodigo =zip (map (\i -> "P" ++ show (200 + i)) [0..]) productos
 
-productosConId = zip (map (\i -> "P" ++ show (200 + i)) [0..length productos - 1]) productos --zip hace id y producto juntos osea como una tupla de pares, ejemplo: [("P200", "Laptop"), ("P201", "Celular"), etc.]
+usuariosConCodigo :: [String]
+usuariosConCodigo = map (\i -> "U" ++ show (300 + i)) [0..299]
 
--- Nombre: usuariosConId
--- Descripción: Genera lista de usuarios del sistema con IDs únicos.
--- Entradas: No recibe parámetros.
--- Salidas: Lista de Strings con IDs de usuario.
--- Validaciones: Genera 300 usuarios consecutivos.
-usuariosConId :: [String]
 
-usuariosConId = map (\i -> "U" ++ show (300 + i)) [0..299]
-
--- =========================
--- GENERADOR PRINCIPAL
--- =========================
-
--- Nombre: generarEventos
--- Descripción: Genera eventos nuevos basados en eventos existentes.
--- Entradas: Lista de Evento existentes.
--- Salidas: IO [Evento].
--- Validaciones: Calcula cantidad de eventos entre 10 y 25 según tamaño del sistema.
 generarEventos :: [Evento] -> IO [Evento]
 generarEventos eventosExistentes = do
     fechaBase <- obtenerFechaActual
 
-    let idBase = obtenerUltimoId eventosExistentes
-        base = length eventosExistentes
+    let
+        cantidadBase = length eventosExistentes
+        cantidadEventos = limitarCantidad (10 + (cantidadBase `div` 5) `mod` 16)
+        indices = [cantidadBase + 1 .. cantidadBase + cantidadEventos]
 
-        cantidadElementosCreados = 10 + (base `div` 5) `mod` 16
+    mapM (crearEvento fechaBase) indices
 
-        cantidadFinal = limitar cantidadElementosCreados
+crearEvento :: Day -> Int -> IO Evento
+crearEvento fechaBase indice = do
+    fecha <- generarFechaEvento fechaBase indice
+    tiempo <- getCurrentTime
 
-        indices = [base + 1 .. base + cantidadFinal]
+    let ruido = floor (utctDayTime tiempo * 1000) :: Int
+        idEvento = indice - 1
 
-    return (map (crearEventoDesde idBase fechaBase) indices)
+        mezclaCat = indice * 131+ ruido * 97 + idEvento * 53+ (indice `div` 3) * 17
 
--- =========================
--- CREAR EVENTO
--- =========================
+        idxCategoria = abs mezclaCat `mod` 100 -- para distribuir entre 5 categorías de forma no lineal
 
--- Nombre: crearEventoDesde
--- Descripción: Construye un evento individual con datos generados automáticamente.
--- Entradas: Int idBase, Day fechaBase, Int indice.
--- Salidas: Evento completo.
--- Validaciones: Usa lógica cíclica para generar datos consistentes y repetibles.
-crearEventoDesde :: Int -> Day -> Int -> Evento
+        categoria 
+            | idxCategoria < 20 = Visualizacion
+            | idxCategoria < 40 = Apartado
+            | idxCategoria < 70 = Compra
+            | idxCategoria < 85 = Seguimiento
+            | otherwise = Devolucion
 
-crearEventoDesde idBase fechaBase indice =
 
-    let idGenerado = indice - 1
+        (idProducto, nombreProducto) = productosConCodigo !! (indice `mod` length productosConCodigo)
 
-        categoriaEvento = categorias !! (indice `mod` length categorias)
+        usuario = usuariosConCodigo !! (indice `mod` length usuariosConCodigo)
 
-        (productoId, productoEvento) = productosConId !! (indice `mod` length productosConId)
+        metodo = metodosPago !! (indice `mod` length metodosPago)
 
-        usuarioEvento = usuariosConId !! (indice `mod` length usuariosConId)
+        estado =estadosEvento !! (indice `mod` length estadosEvento)
 
-        metodoEvento = metodos !! (indice `mod` length metodos)
+        valor = calcularValor idEvento indice ruido
 
-        estadoEvento = estados !! (indice `mod` length estados)
+        cantidad = calcularCantidad categoria indice
 
-        valorEvento = fromIntegral (500 + ((idGenerado * 137 + indice * 97) `mod` 74500))-- Esto genera un valor entre 500 y 75000 de forma pseudoaleatoria basado en el ID y el índice.
+        subtotal = valor * fromIntegral cantidad
 
-        fechaEvento = generarFecha fechaBase indice
+        total =
+            if categoria == Compra
+                then 0
+                else subtotal
 
-        cantidadEvento = 
-            case categoriaEvento of
-                Visualizacion -> 1
-                Seguimiento -> 1
-                Apartado -> 1 + (indice `mod` 3)-- Esto genera una cantidad entre 1 y 3 para Apartado.
-                Compra -> 1 + (indice `mod` 8)-- Esto genera una cantidad entre 1 y 8 para Compra.
-                Devolucion -> 1
-
-    in Evento
-        (idGenerado `mod` 9000000)-- Esto asegura que el ID no exceda 7 dígitos, aunque en la práctica no debería llegar a tanto.
-        categoriaEvento
-        valorEvento
-        fechaEvento
-        usuarioEvento
-        productoId
-        productoEvento
-        cantidadEvento
-        metodoEvento
-        estadoEvento
+    return (Evento
+        idEvento
+        categoria
+        valor
+        fecha
+        usuario
+        idProducto
+        nombreProducto
+        cantidad
+        metodo
+        estado
         0
         False
+        total)
 
--- Nombre: obtenerUltimoId
--- Descripción: Obtiene el ID más alto de la lista de eventos.
--- Entradas: Lista de Evento.
--- Salidas: Int con el ID máximo.
--- Validaciones: Si la lista está vacía devuelve -1.
+calcularValor :: Int -> Int -> Int -> Float
+calcularValor idEvento indice ruido =
+    let 
+        mezcla = idEvento * 131 + indice * 97 + ruido * 19
+        rango = mezcla `mod` 74500
+    in 
+        fromIntegral (max 500 (500 + rango))
+
+
+calcularCantidad :: Categoria -> Int -> Int
+calcularCantidad cat indice =
+    case cat of
+        Visualizacion -> 1
+        Seguimiento   -> 1
+        Apartado      -> 1 + (indice `mod` 3)
+        Compra        -> 1 + (indice `mod` 8)
+        Devolucion    -> 1
+
+
 obtenerUltimoId :: [Evento] -> Int
-
-obtenerUltimoId [] = -1-- Si no hay eventos, el próximo ID será 0, así que el último ID se considera -1.
+obtenerUltimoId [] = -1
 obtenerUltimoId eventos = maximum (map idEvento eventos)

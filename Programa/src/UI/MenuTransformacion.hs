@@ -1,13 +1,10 @@
 module UI.MenuTransformacion where
 
 import Types.Evento
-import Core.Transformacion
+import Core.Impuestos
+import Core.Etiquetas
+import UI.Reportes
 
--- Nombre: menuTransformacion
--- Descripción: Muestra el menú de transformación y permite aplicar impuestos, etiquetas o ambos a la lista de eventos.
--- Entradas: Lista de eventos.
--- Salidas: IO [Evento] con la lista de eventos actualizada según la opción seleccionada.
--- Validaciones: La opción ingresada debe ser válida (1, 2, 3 o salir implícito por recursión en caso de error).
 menuTransformacion :: [Evento] -> IO [Evento]
 menuTransformacion eventos = do
 

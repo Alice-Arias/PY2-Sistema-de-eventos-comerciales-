@@ -43,7 +43,8 @@ eventoToCSV evento =
     show (metodoPago evento) ++ "," ++
     show (estado evento) ++ "," ++
     show (impuesto evento) ++ "," ++
-    show (etiqueta evento)
+    show (etiqueta evento) ++ "," ++
+    show (total evento)
 
 -- Nombre: existeEvento
 -- Descripción: Verifica si un evento ya existe en una lista por su ID.
@@ -51,7 +52,6 @@ eventoToCSV evento =
 -- Salidas: Bool (True si existe).
 -- Validaciones: Compara solo por idEvento, no valida otros campos ni consistencia.
 existeEvento :: Int -> [Evento] -> Bool
-
 existeEvento idBuscado = any (\evento -> idEvento evento == idBuscado)
 
 
@@ -93,9 +93,9 @@ split separador texto =
     let (parteAntes, restoTexto) = break (== separador) texto
 
         listaRestante =
-            if null restoTexto
-                then []
-                else split separador (tail restoTexto)
+                        if null restoTexto
+                        then []
+                        else split separador (tail restoTexto)
 
     in parteAntes : listaRestante
 
@@ -103,11 +103,11 @@ split separador texto =
 -- Descripción: Convierte una línea CSV a Evento si es válida.
 -- Entradas: String (línea CSV).
 -- Salidas: Maybe Evento.
--- Validaciones: Verifica que tenga 12 campos, que los tipos sean correctos. Devuelve Nothing si no es válido, Just Evento si es correcto. No valida valores específicos, solo formato y tipos.
+-- Validaciones: Verifica que tenga 13 campos, que los tipos sean correctos. Devuelve Nothing si no es válido, Just Evento si es correcto. No valida valores específicos, solo formato y tipos.
 csvToEventoSeguro :: String -> Maybe Evento
 csvToEventoSeguro lineaCSV =
     let campos = split ',' lineaCSV
-    in if length campos /= 12
+    in if length campos /= 13
         then Nothing
         else Just (Evento
             (read (head campos))           -- idEvento
@@ -122,6 +122,7 @@ csvToEventoSeguro lineaCSV =
             (read (campos !! 9))           -- estado
             (read (campos !! 10))          -- impuesto
             (read (campos !! 11))          -- etiqueta
+            (read (campos !! 12))          -- total
         )
 
 -- NOMBRE: leerEventosSeguro

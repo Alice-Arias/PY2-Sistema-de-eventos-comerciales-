@@ -47,4 +47,5 @@ data Evento = Evento
     , estado :: Estado
     , impuesto :: Float
     , etiqueta :: Bool
+    , total :: Float
     } deriving (Show, Read, Eq)
