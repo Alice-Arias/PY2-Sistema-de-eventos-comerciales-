@@ -10,6 +10,7 @@ import UI.MenuAnalisis (menuAnalisis)
 import Services.BusquedaRangFechas (buscarPorRangoFechas)
 import Utils.FechaSegura (parseFecha)
 import Utils.Colores
+import Services.Estadisticas (generarEstadisticas)
 
 cicloMenu :: FilePath -> [Evento] -> IO ()
 cicloMenu rutaArchivo eventos = do
@@ -30,7 +31,7 @@ manejarOpcion ruta opcion eventos =
 
         "4" -> opcionBusquedaRango ruta eventos
 
-        "5" -> opcionSimple ruta eventos "GENERACIÓN DE ESTADÍSTICAS"
+        "5" -> opcionEstadisticas ruta eventos
 
         "6" -> mostrarSalidaSistema
 
@@ -47,11 +48,6 @@ opcionTransformar ruta eventos = do
     guardarEventos ruta eventosTransformados
     cicloMenu ruta eventosTransformados
 
-opcionSimple :: FilePath -> [Evento] -> String -> IO ()
-opcionSimple ruta eventos tituloSeccion = do
-    eventosActualizados <- actualizarSistema ruta eventos
-    mostrarTitulo tituloSeccion
-    cicloMenu ruta eventosActualizados
 
 opcionAnalisisTemporal :: FilePath -> [Evento] -> IO ()
 opcionAnalisisTemporal ruta eventos = do
@@ -88,6 +84,18 @@ pedirFechaValida mensaje = do
             putStrLn (errorMsg "Formato inválido. Usa dd-mm-yyyy")
             pedirFechaValida mensaje
 
+opcionEstadisticas :: FilePath -> [Evento] -> IO ()
+opcionEstadisticas ruta eventos = do
+
+    eventosActualizados <- actualizarSistema ruta eventos
+
+    putStrLn (titulo "========================================")
+    putStrLn (titulo "   GENERANDO ESTADÍSTICAS")
+    putStrLn (titulo "========================================")
+
+    _ <- generarEstadisticas eventosActualizados
+
+    cicloMenu ruta eventosActualizados
 -- =========================
 -- LÓGICA SISTEMA
 -- =========================
