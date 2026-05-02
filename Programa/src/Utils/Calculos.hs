@@ -3,46 +3,48 @@ module Utils.Calculos where
 import Types.Evento
 import Types.Categoria
 
+
 calcularSubtotal :: Float -> Int -> Float
-calcularSubtotal precio cantidad =
-    precio * fromIntegral cantidad
+calcularSubtotal precioUnitario cantidad =
+    precioUnitario * fromIntegral cantidad
 
 
 calcularImpuesto13 :: Float -> Float
-calcularImpuesto13 subtotal =
-    subtotal * 0.13
+calcularImpuesto13 subtotal = subtotal * 0.13
 
 
 redondear :: Float -> Float
-redondear numero =
-    fromIntegral (round (numero * 100)) / 100
+redondear valor = fromIntegral (round (valor * 100)) / 100
 
 
--- =========================
--- TRANSFORMACIÓN DE EVENTOS
--- =========================
 
 calcularTotales :: Evento -> Evento
 calcularTotales evento =
 
-    let subtotal = calcularSubtotal (valor evento) (cantidad evento)
-        subtotalRedondeado = redondear subtotal
+    let precioUnitario = valor evento
+        cantidadUnidades = cantidad evento
+
+        subtotalCalculado = calcularSubtotal precioUnitario cantidadUnidades
+
+        subtotalRedondeado = redondear subtotalCalculado
 
     in case categoria evento of
 
         Compra ->
-            let impuesto = redondear (calcularImpuesto13 subtotalRedondeado)
-            in evento { impuesto = impuesto, total = subtotalRedondeado + impuesto }
+            let impuestoCalculado = redondear (calcularImpuesto13 subtotalRedondeado)
 
+                totalFinal = subtotalRedondeado + impuestoCalculado
+
+            in evento{ impuesto = impuestoCalculado, total = totalFinal }
         _ ->
-            evento { impuesto = 0 , total = subtotalRedondeado }
+            evento{ impuesto = 0, total = subtotalRedondeado }
+
 
 
 actualizarTotales :: [Evento] -> [Evento]
-actualizarTotales =
-    map calcularTotales
+actualizarTotales = map calcularTotales
+
 
 
 porcentaje :: Float -> Float -> Float
-porcentaje parte total =
-    (parte / total) * 100
+porcentaje parte total = (parte / total) * 100

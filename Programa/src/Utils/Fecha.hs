@@ -1,13 +1,10 @@
 module Utils.Fecha
 (
-    -- nuevos nombres
     obtenerMes,
     obtenerAnio,
     formatearMesAno,
     formatearFecha,
     nombreMes,
-
-    -- compatibilidad con código viejo (NO rompe nada)
     extraerMes,
     extraerAnio,
     extraerMesAno
@@ -17,9 +14,6 @@ import Types.Evento
 import Data.Time
 
 
--- =========================
--- CONVERSIÓN DE FECHA
--- =========================
 
 timestampADate :: Int -> Day
 timestampADate t =
@@ -29,9 +23,6 @@ timestampADate t =
     in fromGregorian (toInteger anio) mes dia
 
 
--- =========================
--- NUEVO ESTÁNDAR
--- =========================
 
 obtenerMes :: Evento -> Int
 obtenerMes evento =
@@ -60,9 +51,6 @@ formatearFecha fecha =
     in show dia ++ " " ++ nombreMes mes ++ " " ++ show anio
 
 
--- =========================
--- MESES
--- =========================
 
 nombreMes :: Int -> String
 nombreMes 1  = "Enero"
@@ -80,9 +68,6 @@ nombreMes 12 = "Diciembre"
 nombreMes _  = "Desconocido"
 
 
--- =========================
--- COMPATIBILIDAD (IMPORTANTE)
--- =========================
 
 extraerMes :: Evento -> Int
 extraerMes = obtenerMes

@@ -4,174 +4,93 @@ import Types.Evento
 import Services.Analisis.MesMayorMonto
 import Services.Analisis.DiaSemanaActivo
 import Services.Analisis.EventosExtremos
-import Utils.Formato (formatearMonto)
-import Utils.Colores
+import UI.AnalisisTemporalUI
+import Utils.Colores (errorMsg)
 import Data.Time (Day, addDays, diffDays)
 import Types.Fecha (intToDay)
-import Utils.Fecha (formatearFecha)
 import Data.List (sortOn)
-import System.IO (hFlush, stdout)
 
--- =========================
--- MES + DÍA
--- =========================
 
 analisisMesDia :: [Evento] -> IO ()
 analisisMesDia eventos = do
+    let (mesTop, montoMes) = obtenerMesMayor eventos
+    let (diaTop, totalDia) = obtenerDiaMasActivo eventos
 
-    let (mesTop, montoMesTop) = mesConMayorMonto eventos
-    let (diaTop, cantidadDiaTop) = diaMasActivo eventos
+    mostrarMesDiaUI mesTop montoMes diaTop totalDia
 
-    putStrLn ("\n" ++ titulo "========================================")
-    putStrLn (titulo "        MES CON MAYOR MONTO")
-    putStrLn (titulo "========================================")
+obtenerMesMayor :: [Evento] -> (String, Float)
+obtenerMesMayor = mesConMayorMonto
 
-    putStrLn (
-        texto (alinearTexto mesTop 18) ++
-        " | " ++ okMsg (formatearMonto montoMesTop))
+obtenerDiaMasActivo :: [Evento] -> (String, Int)
+obtenerDiaMasActivo = diaMasActivo
 
-    putStrLn ("\n" ++ titulo "========================================")
-    putStrLn (titulo "        DÍA MÁS ACTIVO")
-    putStrLn (titulo "========================================")
-
-    putStrLn (
-        texto (alinearTexto diaTop 18) ++
-        " | " ++ okMsg (show cantidadDiaTop ++ " eventos"))
-
--- =========================
--- PEDIR INTERVALO
--- =========================
-pedirIntervalo :: Int -> IO Int
-pedirIntervalo maxDias = do
-    putStrLn ""
-    putStr (inputMsg ("Ingrese el intervalo en días (1 - " ++ show maxDias ++ "): "))
-    hFlush stdout   
-
-    input <- getLine
-
-    case reads input :: [(Int, String)] of
-        [(dias, "")] | dias >= 1 && dias <= maxDias ->
-            return dias
-
-        [(dias, "")] -> do
-            putStrLn (errorMsg "Fuera de rango.")
-            pedirIntervalo maxDias
-
-        _ -> do
-            putStrLn (errorMsg "Entrada inválida.")
-            pedirIntervalo maxDias
-
--- =========================
--- EXTREMOS
--- =========================
 
 analisisExtremos :: [Evento] -> IO ()
 analisisExtremos eventos = do
+    let (eventoViejo, eventoNuevo) = obtenerExtremos eventos
+    mostrarExtremosUI eventoViejo eventoNuevo
 
-    let (eventoViejo, eventoNuevo) = eventosExtremos eventos
-
-    putStrLn ("\n" ++ titulo "========================================")
-    putStrLn (titulo "        EVENTOS EXTREMOS")
-    putStrLn (titulo "========================================")
-
-    mostrarEvento "MÁS ANTIGUO" eventoViejo
-    mostrarEvento "MÁS RECIENTE" eventoNuevo
-
-mostrarEvento :: String -> Evento -> IO ()
-mostrarEvento tituloEvento evento = do
-
-    putStrLn ("\n" ++ separador "----------------------------------------")
-    putStrLn (subtitulo ("        " ++ tituloEvento))
-    putStrLn (separador "----------------------------------------")
-
-    putStrLn (texto ("ID    : " ++ show (idEvento evento)))
-    putStrLn (texto ("Fecha : " ++ formatearFecha (timestamp evento)))
-
--- =========================
--- RESUMEN POR INTERVALOS
--- =========================
+obtenerExtremos :: [Evento] -> (Evento, Evento)
+obtenerExtremos = eventosExtremos
 
 analisisResumen :: [Evento] -> IO ()
 analisisResumen [] = putStrLn (errorMsg "No hay eventos.")
 analisisResumen eventos = do
 
-    let (eventoViejo, eventoNuevo) = eventosExtremos eventos
-    let fechaMin = timestamp eventoViejo
-    let fechaMax = timestamp eventoNuevo
+    let (fechaInicio, fechaFin) = obtenerRangoFechas eventos
+    let diasDisponibles = calcularDiasDisponibles fechaInicio fechaFin
 
-    let diasDisponibles =
-            fromIntegral (diffDays (intToDay fechaMax) (intToDay fechaMin))
-
-    intervalo <- pedirIntervalo diasDisponibles
+    intervalo <- pedirIntervaloUI diasDisponibles
 
     let grupos = agruparPorIntervalo intervalo eventos
 
-    putStrLn ("\n" ++ titulo "==============================================================")
-    putStrLn (titulo "        RESUMEN POR INTERVALO DE DÍAS")
-    putStrLn (titulo "==============================================================")
+    imprimirResumenUI grupos
 
-    putStrLn (
-        subtitulo (ajustarTexto "Rango de Fechas" 40) ++ " | " ++
-        subtitulo (ajustarTexto "Cantidad" 8) ++ " | " ++
-        subtitulo (ajustarTexto "Monto Total" 18))
 
-    putStrLn (separador (replicate 70 '-'))
+obtenerRangoFechas :: [Evento] -> (Day, Day)
+obtenerRangoFechas eventos =
+    let (eventoViejo, eventoNuevo) = eventosExtremos eventos
+    in ( intToDay (timestamp eventoViejo) , intToDay (timestamp eventoNuevo))
 
-    mapM_ imprimirGrupo grupos
+calcularDiasDisponibles :: Day -> Day -> Int
+calcularDiasDisponibles inicio fin = fromIntegral (diffDays fin inicio)
 
--- =========================
--- AGRUPACIÓN
--- =========================
-
-agruparPorIntervalo :: Int -> [Evento] -> [[Evento]]
+agruparPorIntervalo :: Int -> [Evento] -> [(Day, Day, [Evento])]
 agruparPorIntervalo _ [] = []
 agruparPorIntervalo dias eventos =
-    let ordenados = sortOn timestamp eventos
-        inicio = intToDay (timestamp (head ordenados))
-    in agruparPorDias inicio dias ordenados
+    let 
+        eventosOrdenados = ordenarEventos eventos
+        fechaInicio = obtenerFechaInicio eventosOrdenados
+        fechaFin    = obtenerFechaFin eventosOrdenados
 
-agruparPorDias :: Day -> Int -> [Evento] -> [[Evento]]
-agruparPorDias _ _ [] = []
-agruparPorDias inicio dias eventos =
-    let fin = addDays (fromIntegral dias) inicio
-        (grupo, resto) =
-            span (\e -> intToDay (timestamp e) < fin) eventos
-    in if null grupo
-        then agruparPorDias fin dias resto
-        else grupo : agruparPorDias fin dias resto
+    in agruparPorDias fechaInicio fechaFin dias eventosOrdenados
 
--- =========================
--- IMPRESIÓN
--- =========================
+ordenarEventos :: [Evento] -> [Evento]
+ordenarEventos = sortOn timestamp
 
-imprimirGrupo :: [Evento] -> IO ()
-imprimirGrupo [] = return ()
-imprimirGrupo grupo = do
-    let inicio = formatearFecha (timestamp (head grupo))
-        fin = formatearFecha (timestamp (last grupo))
-        rango = inicio ++ " - " ++ fin
+obtenerFechaInicio :: [Evento] -> Day
+obtenerFechaInicio eventos = intToDay (timestamp (head eventos))
 
-        cantidad = length grupo
-        montoTotal = sum (map total grupo)
+obtenerFechaFin :: [Evento] -> Day
+obtenerFechaFin eventos = intToDay (timestamp (last eventos))
 
-    putStrLn (
-        texto (ajustarTexto rango 40) ++ " | " ++
-        texto (ajustarNumero cantidad 8) ++ " | " ++
-        okMsg (ajustarTexto (formatearMonto montoTotal) 18))
+agruparPorDias :: Day -> Day -> Int -> [Evento] -> [(Day, Day, [Evento])]
+agruparPorDias fechaActual fechaFinal dias eventos
+    | fechaActual > fechaFinal = []
+    | otherwise =
+        let fechaLimite = sumarDias fechaActual dias
 
--- =========================
--- UTILS
--- =========================
+            (grupoActual, restoEventos) = separarEventos fechaLimite eventos
 
-ajustarTexto :: String -> Int -> String
-ajustarTexto txt ancho =
-    take ancho (txt ++ repeat ' ')
+            fechaFinIntervalo = ajustarFinIntervalo fechaLimite fechaFinal
 
-ajustarNumero :: Int -> Int -> String
-ajustarNumero n ancho =
-    let txt = show n
-    in replicate (ancho - length txt) ' ' ++ txt
+        in (fechaActual, fechaFinIntervalo, grupoActual) : agruparPorDias fechaLimite fechaFinal dias restoEventos
 
-alinearTexto :: String -> Int -> String
-alinearTexto texto ancho =
-    texto ++ replicate (ancho - length texto) ' '
+sumarDias :: Day -> Int -> Day
+sumarDias fecha dias = addDays (fromIntegral dias) fecha
+
+separarEventos :: Day -> [Evento] -> ([Evento], [Evento])
+separarEventos fechaLimite = span (\e -> intToDay (timestamp e) < fechaLimite)
+
+ajustarFinIntervalo :: Day -> Day -> Day
+ajustarFinIntervalo fechaLimite = min (addDays (-1) fechaLimite)

@@ -1,6 +1,5 @@
 module Utils.Colores where
 
--- RESET
 reset :: String
 reset = "\ESC[0m"
 
@@ -18,9 +17,6 @@ blanco   = "\ESC[37m"
 bold :: String
 bold = "\ESC[1m"
 
--- =========================
--- FUNCIONES BASE
--- =========================
 
 color :: String -> String -> String
 color c txt = c ++ txt ++ reset
@@ -28,9 +24,6 @@ color c txt = c ++ txt ++ reset
 colorBold :: String -> String -> String
 colorBold c txt = bold ++ c ++ txt ++ reset
 
--- =========================
--- FUNCIONES PRO (MEJORADAS)
--- =========================
 
 -- Títulos principales (menos chillones que cyan)
 titulo :: String -> String

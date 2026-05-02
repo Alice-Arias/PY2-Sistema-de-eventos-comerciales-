@@ -10,9 +10,6 @@ import Core.Promedios
 import Utils.Formato (formatearMonto)
 import Utils.Colores
 
--- =========================
--- REPORTE IMPUESTOS
--- =========================
 
 reporteImpuestos :: [Evento] -> IO ()
 reporteImpuestos eventos = do
@@ -34,9 +31,6 @@ reporteImpuestos eventos = do
     putStrLn (titulo "══════════════════════════════════════")
 
 
--- =========================
--- REPORTE ETIQUETAS
--- =========================
 
 reporteEtiquetas :: [Evento] -> IO ()
 reporteEtiquetas eventos = do
@@ -58,9 +52,9 @@ reporteEtiquetas eventos = do
 
     putStrLn (colorBold magenta
         (ajustarTexto "Categoría" 15 ++ " | "
-      ++ ajustarTexto "Total" 7 ++ " | "
-      ++ ajustarTexto "Promedio" 18 ++ " | "
-      ++ "Sobre"))
+        ++ ajustarTexto "Total" 7 ++ " | "
+        ++ ajustarTexto "Promedio" 18 ++ " | "
+        ++ "Sobre"))
 
     putStrLn (separador (replicate 65 '-'))
 
@@ -72,19 +66,12 @@ reporteEtiquetas eventos = do
 
         in putStrLn (texto (
             ajustarTexto (show cat) 15 ++ " | "
-         ++ ajustarNumero cantidadTotal 7 ++ " | "
-         ++ ajustarTexto (formatearMonto promedio) 18 ++ " | "
-         ++ ajustarNumero sobrePromedio 6
-        ))
-
-        ) categorias
+        ++ ajustarNumero cantidadTotal 7 ++ " | "
+        ++ ajustarTexto (formatearMonto promedio) 18 ++ " | "
+        ++ ajustarNumero sobrePromedio 6)) ) categorias
 
     putStrLn (titulo "════════════════════════════════════════")
 
-
--- =========================
--- REPORTE COMPLETO
--- =========================
 
 reporteCompleto :: [Evento] -> IO ()
 reporteCompleto eventos = do
@@ -103,11 +90,6 @@ reporteCompleto eventos = do
     putStrLn (okMsg ("Sobre promedio  : " ++ show totalEti))
 
     putStrLn (titulo "══════════════════════════════════════")
-
-
--- =========================
--- AUXILIARES
--- =========================
 
 obtenerPromedio :: Categoria -> [(Categoria, Float)] -> Float
 obtenerPromedio cat lista =

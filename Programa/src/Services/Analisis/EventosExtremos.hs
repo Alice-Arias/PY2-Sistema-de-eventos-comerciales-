@@ -3,14 +3,25 @@ module Services.Analisis.EventosExtremos where
 import Types.Evento
 import Data.List (sortOn)
 
--- Devuelve (evento más antiguo, evento más reciente)
+
+ordenarEventosPorFecha :: [Evento] -> [Evento]
+ordenarEventosPorFecha = sortOn timestamp
+
+obtenerPrimero :: [Evento] -> Evento
+obtenerPrimero = head
+
+obtenerUltimo :: [Evento] -> Evento
+obtenerUltimo = last
+
 eventosExtremos :: [Evento] -> (Evento, Evento)
 eventosExtremos [] = error "No hay eventos para analizar"
 
 eventosExtremos eventos =
-    let eventosOrdenadosPorFecha = sortOn timestamp eventos
+    let
+        eventosOrdenados = ordenarEventosPorFecha eventos
 
-        eventoMasAntiguo  = head eventosOrdenadosPorFecha
-        eventoMasReciente  = last eventosOrdenadosPorFecha
+        eventoMasAntiguo = obtenerPrimero eventosOrdenados
+        eventoMasReciente = obtenerUltimo eventosOrdenados
 
-    in (eventoMasAntiguo, eventoMasReciente)
+    in
+        (eventoMasAntiguo, eventoMasReciente)

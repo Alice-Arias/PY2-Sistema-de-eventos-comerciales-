@@ -3,7 +3,6 @@ module Services.Analisis.DiaSemanaActivo where
 import Types.Evento
 import Data.List (nub, maximumBy)
 
-
 nombreDiaSemana :: Int -> String
 nombreDiaSemana numeroDia =
     case numeroDia of
@@ -15,31 +14,40 @@ nombreDiaSemana numeroDia =
         6 -> "Sábado"
         _ -> "Domingo"
 
-
 obtenerIndiceDia :: Evento -> Int
-obtenerIndiceDia evento =
-    timestamp evento `mod` 7
+obtenerIndiceDia evento = timestamp evento `mod` 7
+
+obtenerDiasUnicos :: [Evento] -> [Int]
+obtenerDiasUnicos eventos = nub (map obtenerIndiceDia eventos)
+
+
+filtrarEventosPorDia :: Int -> [Evento] -> [Evento]
+filtrarEventosPorDia dia = filter (\evento -> obtenerIndiceDia evento == dia)
+
+contarEventosPorDia :: Int -> [Evento] -> Int
+contarEventosPorDia dia eventos = length (filtrarEventosPorDia dia eventos)
+
+
+construirResumenDia :: Int -> [Evento] -> (String, Int)
+construirResumenDia dia eventos =
+    let
+        nombreDia = nombreDiaSemana dia
+        cantidadEventos = contarEventosPorDia dia eventos
+    in
+        (nombreDia, cantidadEventos)
+
+
+construirResumenGeneral :: [Int] -> [Evento] -> [(String, Int)]
+construirResumenGeneral dias eventos =
+    map (\dia -> construirResumenDia dia eventos) dias
 
 
 diaMasActivo :: [Evento] -> (String, Int)
 diaMasActivo eventos =
     let
+        diasUnicos = obtenerDiasUnicos eventos
 
-        -- lista de días únicos que aparecen en los eventos
-        diasUnicos :: [Int]
-        diasUnicos = nub (map obtenerIndiceDia eventos)
-
-        -- cuenta cuántos eventos hay en un día específico
-        contarEventosDelDia :: Int -> Int
-        contarEventosDelDia dia =
-            length (filter (\evento -> obtenerIndiceDia evento == dia) eventos)
-
-        -- crea pares: (nombre del día, cantidad de eventos)
-        resumenPorDia :: [(String, Int)]
-        resumenPorDia =
-            map (\dia ->
-                (nombreDiaSemana dia, contarEventosDelDia dia)
-            ) diasUnicos
+        resumenPorDia = construirResumenGeneral diasUnicos eventos
 
     in
         maximumBy (\a b -> compare (snd a) (snd b)) resumenPorDia

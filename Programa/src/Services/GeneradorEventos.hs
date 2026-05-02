@@ -7,6 +7,7 @@ import Types.MetodoPago
 import Types.Estado
 import Types.Producto
 
+
 categorias :: [Categoria]
 categorias = [Visualizacion, Apartado, Compra, Devolucion, Seguimiento]
 
@@ -21,7 +22,9 @@ productos =
     [ "Laptop", "Celular", "Tablet", "Audifonos", "Teclado", "Mouse"
     , "Monitor", "Impresora", "Camara", "Consola", "Smartwatch"
     , "Bocina", "Microfono", "Router", "DiscoDuro", "SSD"
-    , "USB", "Cargador", "Proyector", "TV", "Silla Gamer"]
+    , "USB", "Cargador", "Proyector", "TV", "Silla Gamer"
+    ]
+
 
 limitarCantidad :: Int -> Int
 limitarCantidad n
@@ -33,80 +36,84 @@ limitarCantidad n
 obtenerFechaActual :: IO Day
 obtenerFechaActual = utctDay <$> getCurrentTime
 
-generarFechaEvento :: Day -> Int -> IO Int
-generarFechaEvento fechaBase indice = do
-    tiempoActual <- getCurrentTime
 
-    let
-        segundos = floor (utctDayTime tiempoActual * 1000) :: Int -- Obtener milisegundos para generar ruido
-        ruido = segundos `mod` 997
-        desplazamiento =(indice * 41 + indice * indice + ruido * 17) `mod` 730
+obtenerMilisegundosActuales :: IO Int
+obtenerMilisegundosActuales = do
+    tiempo <- getCurrentTime
+    return (floor (utctDayTime tiempo * 1000) :: Int)
+
+
+obtenerFechaEvento :: Day -> Int -> IO Int
+obtenerFechaEvento fechaBase indice = do
+    milisegundos <- obtenerMilisegundosActuales
+
+    let ruido = milisegundos `mod` 997
+        desplazamiento = (indice * 41 + indice * indice + ruido * 17) `mod` 730
+
         nuevaFecha = addDays (fromIntegral desplazamiento) fechaBase
+
         (anio, mes, dia) = toGregorian nuevaFecha
 
     return (fromIntegral anio * 10000 + mes * 100 + dia)
 
 
+
 productosConCodigo :: [(String, Producto)]
-productosConCodigo =zip (map (\i -> "P" ++ show (200 + i)) [0..]) productos
+productosConCodigo = zip (map (\i -> "P" ++ show (200 + i)) [0..]) productos
+
 
 usuariosConCodigo :: [String]
 usuariosConCodigo = map (\i -> "U" ++ show (300 + i)) [0..299]
+
+
+obtenerProducto :: Int -> (String, Producto)
+obtenerProducto indice = productosConCodigo !! (indice `mod` length productosConCodigo)
+
+
+obtenerUsuario :: Int -> String
+obtenerUsuario indice = usuariosConCodigo !! (indice `mod` length usuariosConCodigo)
 
 
 generarEventos :: [Evento] -> IO [Evento]
 generarEventos eventosExistentes = do
     fechaBase <- obtenerFechaActual
 
-    let
-        cantidadBase = length eventosExistentes
+    let cantidadBase = length eventosExistentes
         cantidadEventos = limitarCantidad (10 + (cantidadBase `div` 5) `mod` 16)
+
         indices = [cantidadBase + 1 .. cantidadBase + cantidadEventos]
 
     mapM (crearEvento fechaBase) indices
 
+
 crearEvento :: Day -> Int -> IO Evento
 crearEvento fechaBase indice = do
-    fecha <- generarFechaEvento fechaBase indice
-    tiempo <- getCurrentTime
+    fecha <- obtenerFechaEvento fechaBase indice
+    milisegundos <- obtenerMilisegundosActuales
 
-    let ruido = floor (utctDayTime tiempo * 1000) :: Int
-        idEvento = indice - 1
+    let idEvento = indice - 1
 
-        mezclaCat = indice * 131+ ruido * 97 + idEvento * 53+ (indice `div` 3) * 17
+        categoriaEvento = determinarCategoria indice milisegundos idEvento
 
-        idxCategoria = abs mezclaCat `mod` 100 -- para distribuir entre 5 categorías de forma no lineal
+        (idProducto, nombreProducto) = obtenerProducto indice
+        usuario = obtenerUsuario indice
 
-        categoria 
-            | idxCategoria < 20 = Visualizacion
-            | idxCategoria < 40 = Apartado
-            | idxCategoria < 70 = Compra
-            | idxCategoria < 85 = Seguimiento
-            | otherwise = Devolucion
+        metodo = seleccionarMetodo indice
+        estado = seleccionarEstado indice
 
-
-        (idProducto, nombreProducto) = productosConCodigo !! (indice `mod` length productosConCodigo)
-
-        usuario = usuariosConCodigo !! (indice `mod` length usuariosConCodigo)
-
-        metodo = metodosPago !! (indice `mod` length metodosPago)
-
-        estado =estadosEvento !! (indice `mod` length estadosEvento)
-
-        valor = calcularValor idEvento indice ruido
-
-        cantidad = calcularCantidad categoria indice
+        valor = calcularValor idEvento indice milisegundos
+        cantidad = calcularCantidad categoriaEvento indice
 
         subtotal = valor * fromIntegral cantidad
 
-        total =
-            if categoria == Compra
-                then 0
-                else subtotal
+        totalFinal =
+            if categoriaEvento == Compra
+            then 0
+            else subtotal
 
     return (Evento
         idEvento
-        categoria
+        categoriaEvento
         valor
         fecha
         usuario
@@ -117,27 +124,52 @@ crearEvento fechaBase indice = do
         estado
         0
         False
-        total)
+        totalFinal)
+
+determinarCategoria :: Int -> Int -> Int -> Categoria
+determinarCategoria indice ruido idEvento =
+    let mezcla =
+            indice * 131 + ruido * 97 + idEvento * 53 + (indice `div` 3) * 17
+
+        idx = abs mezcla `mod` 100
+
+    in
+        if idx < 20 then Visualizacion
+        else if idx < 40 then Apartado
+        else if idx < 70 then Compra
+        else if idx < 85 then Seguimiento
+        else Devolucion
+
+
+seleccionarMetodo :: Int -> MetodoPago
+seleccionarMetodo indice =
+    metodosPago !! (indice `mod` length metodosPago)
+
+
+seleccionarEstado :: Int -> Estado
+seleccionarEstado indice =
+    estadosEvento !! (indice `mod` length estadosEvento)
+
 
 calcularValor :: Int -> Int -> Int -> Float
 calcularValor idEvento indice ruido =
-    let 
-        mezcla = idEvento * 131 + indice * 97 + ruido * 19
+    let mezcla = idEvento * 131 + indice * 97 + ruido * 19
         rango = mezcla `mod` 74500
-    in 
-        fromIntegral (max 500 (500 + rango))
+    in fromIntegral (max 500 (500 + rango))
 
 
 calcularCantidad :: Categoria -> Int -> Int
-calcularCantidad cat indice =
-    case cat of
+calcularCantidad categoria indice =
+    case categoria of
         Visualizacion -> 1
         Seguimiento   -> 1
-        Apartado      -> 1 + (indice `mod` 3)
-        Compra        -> 1 + (indice `mod` 8)
+        Apartado      -> 1
+        Compra        -> 1 + (indice `mod` 3)
         Devolucion    -> 1
 
 
 obtenerUltimoId :: [Evento] -> Int
-obtenerUltimoId [] = -1
-obtenerUltimoId eventos = maximum (map idEvento eventos)
+obtenerUltimoId eventos =
+    if null eventos
+        then -1
+        else maximum (map idEvento eventos)

@@ -4,18 +4,21 @@ import Types.Evento
 import Types.Categoria
 import Core.Promedios
 
+
 etiquetarAltoValor :: [Evento] -> [Evento]
-etiquetarAltoValor eventos =
-    let 
-        promediosPorCategoria = calcularPromedios eventos
-    in 
-        map (etiquetarEvento promediosPorCategoria) eventos
+etiquetarAltoValor listaEventos =
+    let promedios = calcularPromedios listaEventos
+    in map (etiquetarEvento promedios) listaEventos
 
 
-etiquetarEvento :: [(Categoria, Float)] -> Evento -> Evento--maybe false es para evitar error de tipo, ya que lookup devuelve Maybe Float
-etiquetarEvento promediosPorCategoria evento = evento { etiqueta = maybe False (compararValor (valor evento)) promedioDeCategoria }--compararValor es una función que compara el valor del evento con el promedio de su categoría, devuelve True si el valor es mayor que el promedio, False en caso contrario
-    
-    where
-        promedioDeCategoria =lookup (categoria evento) promediosPorCategoria--lookup devuelve Maybe Float, por eso se usa maybe para manejar el caso de que no se encuentre la categoría
+etiquetarEvento :: [(Categoria, Float)] -> Evento -> Evento
+etiquetarEvento promedios evento = evento { etiqueta = esAltoValor promedios evento }
 
-        compararValor valorEvento promedioCategoria = valorEvento > promedioCategoria
+esAltoValor :: [(Categoria, Float)] -> Evento -> Bool
+esAltoValor promedios evento =
+    case obtenerPromedioCategoria promedios (categoria evento) of
+        Nothing       -> False
+        Just promedio -> valor evento > promedio
+
+obtenerPromedioCategoria :: [(Categoria, Float)] -> Categoria -> Maybe Float
+obtenerPromedioCategoria promedios categoriaEvento = lookup categoriaEvento promedios

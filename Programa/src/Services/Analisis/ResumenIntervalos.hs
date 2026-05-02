@@ -4,22 +4,39 @@ import Types.Evento
 import Utils.Fecha (extraerAnio, extraerMes, nombreMes)
 import Data.List (nub, sortOn)
 
+
 resumenIntervalos :: [Evento] -> [(String, Int, Float)]
-resumenIntervalos eventos =
+resumenIntervalos listaEventos =
+    let periodos = obtenerPeriodosOrdenados listaEventos
+    in map (calcularResumen listaEventos) periodos
 
-    let periodos =
-            nub [(extraerAnio e, extraerMes e) | e <- eventos]
+obtenerPeriodosOrdenados :: [Evento] -> [(Int, Int)]
+obtenerPeriodosOrdenados eventos =
+    let periodosUnicos = obtenerPeriodosUnicos eventos
+    in sortOn (\(anio, mes) -> (anio, mes)) periodosUnicos
 
-        ordenados =
-            sortOn (\(a, m) -> (a, m)) periodos
+obtenerPeriodosUnicos :: [Evento] -> [(Int, Int)]
+obtenerPeriodosUnicos eventos = nub [ (extraerAnio evento, extraerMes evento) | evento <- eventos ]
 
-        calcular (anio, mes) =
-            let eventosFiltrados =
-                    filter (\e -> extraerAnio e == anio && extraerMes e == mes) eventos
+calcularResumen :: [Evento] -> (Int, Int) -> (String, Int, Float)
+calcularResumen eventos (anio, mes) =
+    let eventosDelPeriodo = filtrarEventosPorPeriodo eventos anio mes
+        cantidadEventos   = length eventosDelPeriodo
+        montoTotal        = calcularMontoTotal eventosDelPeriodo
+        nombrePeriodo     = construirNombrePeriodo anio mes
+    in (nombrePeriodo, cantidadEventos, montoTotal)
 
-                cantidad = length eventosFiltrados
-                monto = sum (map total eventosFiltrados)
 
-            in (nombreMes mes ++ " " ++ show anio, cantidad, monto)
+filtrarEventosPorPeriodo :: [Evento] -> Int -> Int -> [Evento]
+filtrarEventosPorPeriodo eventos anio mes =
+    filter (\evento -> extraerAnio evento == anio &&extraerMes evento == mes) eventos
 
-    in map calcular ordenados
+
+-- Suma el total de eventos
+calcularMontoTotal :: [Evento] -> Float
+calcularMontoTotal eventos = sum (map total eventos)
+
+
+-- Construye el nombre del periodo
+construirNombrePeriodo :: Int -> Int -> String
+construirNombrePeriodo anio mes = nombreMes mes ++ " " ++ show anio

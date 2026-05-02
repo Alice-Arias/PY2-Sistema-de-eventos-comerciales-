@@ -5,22 +5,33 @@ import Types.Categoria
 import Data.List (nub)
 
 calcularPromedios :: [Evento] -> [(Categoria, Float)]
-calcularPromedios eventos =
-    let 
-        categoriasUnicas = nub (map categoria eventos)
-    in 
-        map (promedioPorCategoria eventos) categoriasUnicas
+calcularPromedios listaEventos =
+    let categoriasUnicas = obtenerCategoriasUnicas listaEventos
+    in map (calcularPromedioCategoria listaEventos) categoriasUnicas
+
+calcularPromedioCategoria :: [Evento] -> Categoria -> (Categoria, Float)
+calcularPromedioCategoria listaEventos categoriaActual =
+    let eventosFiltrados = filtrarEventosPorCategoria listaEventos categoriaActual
+        sumaValores      = sumarValores eventosFiltrados
+        cantidadEventos  = contarEventos eventosFiltrados
+        promedioFinal    = calcularPromedio sumaValores cantidadEventos
+    in (categoriaActual, promedioFinal)
 
 
-promedioPorCategoria :: [Evento] -> Categoria -> (Categoria, Float)
-promedioPorCategoria eventos categoriaActual =
-    let 
-        eventosCat = filter (\e -> categoria e == categoriaActual) eventos
-        suma = sum (map valor eventosCat)
-        cantidad = length eventosCat
-        promedio = 
-            if cantidad == 0 
-            then 0 
-            else suma / fromIntegral cantidad
-    in 
-        (categoriaActual, promedio)
+obtenerCategoriasUnicas :: [Evento] -> [Categoria]
+obtenerCategoriasUnicas listaEventos = nub (map categoria listaEventos)
+
+filtrarEventosPorCategoria :: [Evento] -> Categoria -> [Evento]
+filtrarEventosPorCategoria listaEventos categoriaBuscada = filter (\evento -> categoria evento == categoriaBuscada) listaEventos
+
+sumarValores :: [Evento] -> Float
+sumarValores eventos = sum (map valor eventos)
+
+contarEventos :: [Evento] -> Int
+contarEventos = length
+
+calcularPromedio :: Float -> Int -> Float
+calcularPromedio suma cantidad =
+    if cantidad == 0
+        then 0
+        else suma / fromIntegral cantidad

@@ -3,19 +3,57 @@ module Types.Fecha where
 import Data.Time
 import Text.Printf
 
--- Convierte YYYYMMDD (Int) a Day
+
+extraerAnio :: Int -> Integer
+extraerAnio fecha = fromIntegral (fecha `div` 10000)
+
+
+extraerMes :: Int -> Int
+extraerMes fecha = (fecha `div` 100) `mod` 100
+
+
+extraerDia :: Int -> Int
+extraerDia fecha =
+    fecha `mod` 100
+
+
 intToDay :: Int -> Day
-intToDay x =
-    fromGregorian (fromIntegral anio) mes dia
-  where
-    anio = x `div` 10000
-    mes  = (x `div` 100) `mod` 100
-    dia  = x `mod` 100
+intToDay fecha =
+    let anio = extraerAnio fecha
+        mes  = extraerMes fecha
+        dia  = extraerDia fecha
+    in
+        fromGregorian anio mes dia
 
 
--- Convierte Day a YYYYMMDD (por si lo necesitas después)
+
+obtenerAnio :: Day -> Integer
+obtenerAnio fecha =
+    let (y, _, _) = toGregorian fecha
+    in y
+
+
+obtenerMes :: Day -> Int
+obtenerMes fecha =
+    let (_, m, _) = toGregorian fecha
+    in m
+
+
+obtenerDia :: Day -> Int
+obtenerDia fecha =
+    let (_, _, d) = toGregorian fecha
+    in d
+
+
+formatearComoInt :: Integer -> Int -> Int -> Int
+formatearComoInt anio mes dia =
+    read (printf "%04d%02d%02d" anio mes dia)
+
+
 dayToInt :: Day -> Int
-dayToInt d =
-    read (printf "%04d%02d%02d" y m da)
-  where
-    (y, m, da) = toGregorian d
+dayToInt fecha =
+    let anio = obtenerAnio fecha
+        mes  = obtenerMes fecha
+        dia  = obtenerDia fecha
+    in
+        formatearComoInt anio mes dia

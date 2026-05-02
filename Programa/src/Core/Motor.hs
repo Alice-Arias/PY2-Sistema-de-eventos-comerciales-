@@ -5,110 +5,96 @@ import Services.GeneradorEventos
 import Types.Evento
 import Utils.CSV
 import UI.MenuTransformacion (menuTransformacion)
-import UI.MenuAnalisisTemporal
+import UI.MenuAnalisisTemporal (menuAnalisisTemporal)
+import UI.MenuAnalisis (menuAnalisis)
+import Services.BusquedaRangFechas (buscarPorRangoFechas)
+import Utils.FechaSegura (parseFecha)
 import Utils.Colores
-import System.IO (hFlush, stdout)
--- =========================
--- CICLO PRINCIPAL
--- =========================
+
 cicloMenu :: FilePath -> [Evento] -> IO ()
-cicloMenu ruta eventos = do
+cicloMenu rutaArchivo eventos = do
     mostrarMenu
-    putStrLn ""
-    putStr (inputMsg "Seleccione una opción: ")
-    hFlush stdout
-    opcion <- getLine
-    putStrLn ""
-    manejar ruta opcion eventos
+    opcion <- pedirOpcionUsuario
+    manejarOpcion rutaArchivo opcion eventos
 
--- =========================
--- MANEJO DE OPCIONES
--- =========================
 
-manejar :: FilePath -> String -> [Evento] -> IO ()
-manejar ruta op eventos =
-    case op of
+manejarOpcion :: FilePath -> String -> [Evento] -> IO ()
+manejarOpcion ruta opcion eventos =
+    case opcion of
 
-        "1" -> do
-            eventosActualizados <- actualizarSistema ruta eventos
+        "1" -> opcionTransformar ruta eventos
 
-            eventosTransformados <- menuTransformacion eventosActualizados
+        "2" -> opcionAnalisis ruta eventos
 
-            guardarEventos ruta eventosTransformados
+        "3" -> opcionAnalisisTemporal ruta eventos
 
-            cicloMenu ruta eventosTransformados
+        "4" -> opcionBusquedaRango ruta eventos
 
-        "2" -> do
-            eventosActualizados <- actualizarSistema ruta eventos
+        "5" -> opcionSimple ruta eventos "GENERACIÓN DE ESTADÍSTICAS"
 
-            putStrLn (titulo "==================================")
-            putStrLn (subtitulo "       ANÁLISIS DE DATOS")
-            putStrLn (titulo "==================================")
-            putStrLn ""
+        "6" -> mostrarSalidaSistema
 
-            cicloMenu ruta eventosActualizados
-
-        "3" -> do
-            eventosActualizados <- actualizarSistema ruta eventos
-
-            menuAnalisisTemporal ruta eventosActualizados
-
-            cicloMenu ruta eventosActualizados
-
-        "4" -> do
-            eventosActualizados <- actualizarSistema ruta eventos
-
-            putStrLn (titulo "==================================")
-            putStrLn (subtitulo "     BÚSQUEDA DE EVENTOS")
-            putStrLn (titulo "==================================")
-            putStrLn ""
-
-            cicloMenu ruta eventosActualizados
-
-        "5" -> do
-            eventosActualizados <- actualizarSistema ruta eventos
-
-            putStrLn (titulo "==================================")
-            putStrLn (subtitulo "   GENERACIÓN DE ESTADÍSTICAS")
-            putStrLn (titulo "==================================")
-            putStrLn ""
-
-            cicloMenu ruta eventosActualizados
-
-        "6" -> do
-            putStrLn (titulo "==================================")
-            putStrLn (okMsg "     SALIENDO DEL SISTEMA")
-            putStrLn (titulo "==================================")
-            putStrLn ""
-            return ()
-
-        _ -> do
-            putStrLn (titulo "==================================")
-            putStrLn (errorMsg "     OPCIÓN INVÁLIDA")
-            putStrLn (titulo "==================================")
-            putStrLn ""
-
+        _   -> do
+            mostrarError
             cicloMenu ruta eventos
 
+
+
+opcionTransformar :: FilePath -> [Evento] -> IO ()
+opcionTransformar ruta eventos = do
+    eventosActualizados <- actualizarSistema ruta eventos
+    eventosTransformados <- menuTransformacion eventosActualizados
+    guardarEventos ruta eventosTransformados
+    cicloMenu ruta eventosTransformados
+
+opcionSimple :: FilePath -> [Evento] -> String -> IO ()
+opcionSimple ruta eventos tituloSeccion = do
+    eventosActualizados <- actualizarSistema ruta eventos
+    mostrarTitulo tituloSeccion
+    cicloMenu ruta eventosActualizados
+
+opcionAnalisisTemporal :: FilePath -> [Evento] -> IO ()
+opcionAnalisisTemporal ruta eventos = do
+    eventosActualizados <- actualizarSistema ruta eventos
+    menuAnalisisTemporal ruta eventosActualizados
+    cicloMenu ruta eventosActualizados
+
+opcionAnalisis :: FilePath -> [Evento] -> IO ()
+opcionAnalisis ruta eventos = do
+    eventosActualizados <- actualizarSistema ruta eventos
+    menuAnalisis ruta eventosActualizados
+    cicloMenu ruta eventosActualizados
+
+opcionBusquedaRango :: FilePath -> [Evento] -> IO ()
+opcionBusquedaRango ruta eventos = do
+    eventosActualizados <- actualizarSistema ruta eventos
+    putStrLn (titulo "========================================")
+    putStrLn (titulo "   BÚSQUEDA POR RANGO DE FECHAS")
+    putStrLn (titulo "========================================")
+    inicio <- pedirFechaValida "Ingrese fecha inicio : "
+    fin    <- pedirFechaValida "Ingrese fecha fin : "
+    putStrLn (separador "========================================")
+    buscarPorRangoFechas eventosActualizados inicio fin
+    cicloMenu ruta eventosActualizados
+
+
+pedirFechaValida :: String -> IO String
+pedirFechaValida mensaje = do
+    putStrLn (inputMsg mensaje)
+    entrada <- getLine
+    case parseFecha entrada of
+        Just _  -> return entrada
+        Nothing -> do
+            putStrLn (errorMsg "Formato inválido. Usa dd-mm-yyyy")
+            pedirFechaValida mensaje
+
 -- =========================
--- ACTUALIZACIÓN SISTEMA
+-- LÓGICA SISTEMA
 -- =========================
 
 actualizarSistema :: FilePath -> [Evento] -> IO [Evento]
 actualizarSistema ruta eventos = do
-    nuevos <- generarEventos eventos
-
-    mapM_ (agregarEventoSeguro ruta) nuevos
-
-    let cantidad = length nuevos
-
-    putStrLn (titulo "====================================")
-    putStrLn (subtitulo "        ACTUALIZACIÓN SISTEMA")
-    putStrLn (titulo "====================================")
-
-    putStrLn (okMsg ("Eventos agregados: " ++ show cantidad))
-
-    putStrLn (titulo "====================================")
-    putStrLn ""
-
+    nuevosEventos <- generarEventos eventos
+    mapM_ (agregarEventoSeguro ruta) nuevosEventos
+    mostrarResumenActualizacion (length nuevosEventos)
     leerEventosSeguro ruta

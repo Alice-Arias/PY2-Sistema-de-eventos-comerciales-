@@ -5,40 +5,40 @@ import Utils.Fecha (extraerMesAno)
 import Data.List (nub, maximumBy)
 import Data.Ord (comparing)
 
+obtenerMesEvento :: Evento -> String
+obtenerMesEvento evento = extraerMesAno (timestamp evento)
+
+obtenerMesesUnicos :: [Evento] -> [String]
+obtenerMesesUnicos eventos = nub (map obtenerMesEvento eventos)
+
+
+filtrarEventosPorMes :: String -> [Evento] -> [Evento]
+filtrarEventosPorMes mes = filter (\evento -> obtenerMesEvento evento == mes)
+
+calcularTotalMes :: String -> [Evento] -> Float
+calcularTotalMes mes eventos =
+    let eventosDelMes = filtrarEventosPorMes mes eventos
+    in sum (map total eventosDelMes)
+
+
+construirResumenMes :: String -> [Evento] -> (String, Float)
+construirResumenMes mes eventos =
+    let totalMes = calcularTotalMes mes eventos
+    in (mes, totalMes)
+
+
+construirResumenMensual :: [String] -> [Evento] -> [(String, Float)]
+construirResumenMensual meses eventos =
+    map (\mes -> construirResumenMes mes eventos) meses
+
+
 
 mesConMayorMonto :: [Evento] -> (String, Float)
 mesConMayorMonto eventos =
-
     let
+        mesesUnicos = obtenerMesesUnicos eventos
 
-        -- extrae todos los meses únicos de los eventos
-        mesesUnicos :: [String]
-        mesesUnicos =
-            nub (map (extraerMesAno . timestamp) eventos)
-
-
-        -- calcula el total de un mes específico
-        calcularTotalDelMes :: String -> Float
-        calcularTotalDelMes mes =
-            let eventosDelMes =
-                    filter (\evento ->
-                        extraerMesAno (timestamp evento) == mes
-                    ) eventos
-
-            in sum (map total eventosDelMes)
-
-
-        -- crea pares (mes, total)
-        resumenPorMes :: [(String, Float)]
-        resumenPorMes =
-            map (\mes ->
-                (mes, calcularTotalDelMes mes)
-            ) mesesUnicos
-
-
-        -- obtiene el mes con mayor monto
-        mesConMayorMontoFinal =
-            maximumBy (comparing snd) resumenPorMes
+        resumenPorMes = construirResumenMensual mesesUnicos eventos
 
     in
-        mesConMayorMontoFinal
+        maximumBy (comparing snd) resumenPorMes
