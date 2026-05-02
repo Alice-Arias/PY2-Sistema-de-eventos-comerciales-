@@ -8,26 +8,35 @@ import Utils.Colores
 montoTotal :: [Evento] -> IO ()
 montoTotal eventos = do
 
-    let totalRegistrado = sum (map total eventos)
+    let devoluciones = filter (\e -> categoria e == Devolucion) eventos
+        eventosValidos = filter (\e -> categoria e /= Devolucion) eventos
 
-        totalCorregido =  sum (map calcularTotalCorrecto eventos)
+        totalRegistrado = sum (map total eventosValidos)
+        totalDevoluciones = sum (map total devoluciones)
+
+        totalCorregido = totalRegistrado - totalDevoluciones
 
         diferencia = totalCorregido - totalRegistrado
 
         compras = filter (\e -> categoria e == Compra) eventos
 
-        comprasSinImpuesto =  filter (\e -> impuesto e == 0) compras
+        comprasSinImpuesto = filter (\e -> impuesto e == 0) compras
 
         cantidadSinImpuesto = length comprasSinImpuesto
 
     putStrLn (titulo "\n========================================")
     putStrLn (titulo "            MONTO TOTAL")
     putStrLn (titulo "========================================")
+
     putStrLn (subtitulo " RESUMEN GENERAL")
     putStrLn (separador "----------------------------------------")
+
     putStrLn (texto "  Registrado en sistema : " ++ okMsg (formatearMonto totalRegistrado))
-    putStrLn (texto "  Diferencia no aplicada : " ++ okMsg (formatearMonto diferencia))
+    putStrLn (texto "  Devoluciones          : " ++ warningMsg (formatearMonto totalDevoluciones))
+    putStrLn (texto "  Diferencia aplicada   : " ++ okMsg (formatearMonto diferencia))
+
     putStrLn (separador "----------------------------------------")
+
     putStrLn (subtitulo " ESTADO DE IMPUESTOS")
     putStrLn (separador "----------------------------------------")
 
@@ -55,7 +64,6 @@ montoTotal eventos = do
     putStrLn (okMsg ("  " ++ formatearMonto totalCorregido))
 
     putStrLn (titulo "========================================")
-
 
 calcularTotalCorrecto :: Evento -> Float
 calcularTotalCorrecto e =
