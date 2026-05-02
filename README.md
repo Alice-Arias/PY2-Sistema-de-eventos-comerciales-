@@ -11,10 +11,9 @@ El sistema simula un flujo continuo de datos, permitiendo aplicar transformacion
 
 ---
 
-## 👥 Integrantes
+##  Integrantes
 
 - **Alice Arias Salazar**  
-- **Luis Carlos Trejos**
 
 ---
 
