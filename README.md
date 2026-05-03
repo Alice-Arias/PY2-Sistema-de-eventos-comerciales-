@@ -1,7 +1,7 @@
 # PY2 Sistema de Eventos Comerciales
 
 ![Lenguaje](https://img.shields.io/badge/Lenguaje-Haskell-blue)
-![Estado](https://img.shields.io/badge/Estado-En%20desarrollo-yellow)
+![Estado](https://img.shields.io/badge/Estado-Finalizado-brightgreen)
 ![Versión](https://img.shields.io/badge/Versión-1.0-orange)
 ![Licencia](https://img.shields.io/badge/Licencia-Académico-lightgrey)
 
