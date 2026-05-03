@@ -23,7 +23,7 @@ El sistema simula un flujo continuo de datos, permitiendo aplicar transformacion
 - **Semestre:** I Semestre, 2026  
 - **Proyecto:** Proyecto Programado #2  
 - **Fecha de entrega:** 06/05/2026  
-- **Estatus:** (Pendiente / Excelente / Muy Buena, etc.)
+- **Estatus:** Superior
 
 ---
 
@@ -96,4 +96,4 @@ El sistema permite guardar eventos en archivos `.csv`, logrando:
 Desde la raíz del proyecto:
 
 ```bash
-runhaskell app/Main.hs
+ runhaskell -isrc app/Main.hs
