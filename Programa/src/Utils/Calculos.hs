@@ -214,9 +214,8 @@ sumarDias fecha dias = addDays (fromIntegral dias) fecha
 --   - Lista ordenada previamente
 --------------------------------------------------------------------------------
 separarEventos :: Day -> [Evento] -> ([Evento], [Evento])
-separarEventos fechaLimite =
-    span (\evento -> intToDay (timestamp evento) < fechaLimite)
-
+separarEventos limite =
+    span (\e -> intToDay (timestamp e) < limite)
 --------------------------------------------------------------------------------
 -- Nombre: ajustarFinIntervalo
 -- Entrada:
@@ -241,8 +240,8 @@ ajustarFinIntervalo fechaLimite fechaComparacion =
 --   - Usa lookup
 --------------------------------------------------------------------------------
 obtenerPromedioCategoria :: [(Categoria, Float)] -> Categoria -> Maybe Float
-obtenerPromedioCategoria listaPromedios categoriaBuscada = lookup categoriaBuscada listaPromedios
-
+obtenerPromedioCategoria promedios catBuscada =
+    lookup catBuscada promedios
 --------------------------------------------------------------------------------
 -- Nombre: obtenerCategoriasUnicas
 -- Entrada:
@@ -266,8 +265,8 @@ obtenerCategoriasUnicas listaEventos = nub (map categoria listaEventos)
 --   - Comparación exacta
 --------------------------------------------------------------------------------
 filtrarEventosPorCategoria :: [Evento] -> Categoria -> [Evento]
-filtrarEventosPorCategoria listaEventos categoriaBuscada = filter (\evento -> categoria evento == categoriaBuscada) listaEventos
-
+filtrarEventosPorCategoria eventos catBuscada =
+    filter (\e -> categoria e == catBuscada) eventos
 --------------------------------------------------------------------------------
 -- Nombre: sumarValores
 -- Entrada:
@@ -307,11 +306,10 @@ calcularPromedio suma cantidad = suma / fromIntegral cantidad
 --   - Usa total ajustado (incluye devoluciones negativas)
 --------------------------------------------------------------------------------
 eventoMaxCSV :: [Evento] -> String
+eventoMaxCSV [] = "0,0"
 eventoMaxCSV eventos =
-    let eventoMaximo = maximumBy (compare `on` totalAjustado) eventos
-    in show (idEvento eventoMaximo) ++ "," ++ limpiarFloat (totalAjustado eventoMaximo)
-
-
+    let e = maximumBy (compare `on` totalAjustado) eventos
+    in show (idEvento e) ++ "," ++ limpiarFloat (totalAjustado e)
 --------------------------------------------------------------------------------
 -- Nombre: eventoMinCSV
 -- Entrada:
@@ -378,14 +376,21 @@ limpiarFloat = show
 --------------------------------------------------------------------------------
 eventoMinSinDevolucionesCSV :: [Evento] -> String
 eventoMinSinDevolucionesCSV eventos =
-    let eventosSinDevoluciones = filter (\evento -> categoria evento /= Devolucion) eventos
-    in if null eventosSinDevoluciones
-        then "0,0"
-        else
-            let eventoMinimo = minimumBy (compare `on` totalAjustado) eventosSinDevoluciones
-            in show (idEvento eventoMinimo) ++ "," ++ limpiarFloat (totalAjustado eventoMinimo)
+    let eventosValidos =  filter (\e -> categoria e /= Devolucion) eventos
 
+    in case eventosValidos of
 
+        [] -> "0,0"
+
+        _  ->
+
+            let eventoMinimo = minimumBy (compare `on` totalAjustado) eventosValidos
+
+                idTxt =  show (idEvento eventoMinimo)
+
+                totalTxt = limpiarFloat (totalAjustado eventoMinimo)
+
+            in idTxt ++ "," ++ totalTxt
 --------------------------------------------------------------------------------
 -- Nombre: calcularDiaMasActivo
 -- Entrada:
@@ -412,13 +417,13 @@ calcularDiaMasActivo eventos =
 --------------------------------------------------------------------------------
 contarDias :: [Evento] -> [(String, Int)]
 contarDias eventos =
+    let dias =  map (formatearFecha . timestamp) eventos
 
-    let 
-        dias = map (formatearFecha . timestamp) eventos
-        diasUnicos = nub dias
+        diasUnicos =  nub dias
 
-    in map (\dia -> (dia, length (filter (== dia) dias))) diasUnicos
+        contar dia =  (dia, length (filter (== dia) dias))
 
+    in map contar diasUnicos
 --------------------------------------------------------------------------------
 -- Nombre: quitarGuiones
 -- Entrada:
@@ -459,8 +464,7 @@ formatearTotal evento subtotal =
 --   - Usa totalAjustado
 --------------------------------------------------------------------------------
 calcularMontoTotal :: [Evento] -> Float
-calcularMontoTotal eventos =
-    sum (map totalAjustado eventos)
+calcularMontoTotal eventos =  sum (map totalAjustado eventos)
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerAnios
@@ -473,10 +477,11 @@ calcularMontoTotal eventos =
 --------------------------------------------------------------------------------
 obtenerAnios :: [Evento] -> [Integer]
 obtenerAnios eventos =
-    let anios = map (extraerAnio . timestamp) eventos
-        aniosUnicos = nub anios
-    in sort aniosUnicos
+    let anios =   map (extraerAnio . timestamp) eventos
 
+        sinRepetir = nub anios
+
+    in sort sinRepetir
 --------------------------------------------------------------------------------
 -- Nombre: obtenerCategorias
 -- Entrada:
@@ -505,16 +510,20 @@ obtenerCategorias eventos =
 promedioCategoriaAnioCalc :: [Evento] -> Integer -> Categoria -> Float
 promedioCategoriaAnioCalc eventos anio categoriaBuscada =
     let
-        eventosFiltrados = filter (\evento ->   categoria evento == categoriaBuscada &&  extraerAnio (timestamp evento) == anio ) eventos
+        eventoPertenece evento =
+        
+            categoria evento == categoriaBuscada &&  extraerAnio (timestamp evento) == anio
 
-        sumaTotales = sum (map totalAjustado eventosFiltrados)
-        cantidadEventos = length eventosFiltrados
+        eventosFiltrados = filter eventoPertenece eventos
+
+        sumaTotales =   sum (map totalAjustado eventosFiltrados)
+
+        cantidad =    length eventosFiltrados
 
     in
-        if cantidadEventos == 0
+        if cantidad == 0
             then 0
-            else sumaTotales / fromIntegral cantidadEventos
-
+            else sumaTotales / fromIntegral cantidad
 --------------------------------------------------------------------------------
 -- Nombre: eMinimoSinDev
 -- Entrada:
@@ -526,13 +535,19 @@ promedioCategoriaAnioCalc eventos anio categoriaBuscada =
 --------------------------------------------------------------------------------
 eMinimoSinDev :: [Evento] -> String
 eMinimoSinDev eventos =
-    let filtrados = filter esValido eventos
-    in if null filtrados
+    let eventosValidos = filter esValido eventos
+
+    in if null eventosValidos
         then "Sin datos"
         else
-            let e = minimumBy (compare `on` totalSinDevoluciones) filtrados
-            in show (idEvento e) ++ "," ++ limpiarFloat (totalSinDevoluciones e)
 
+            let eventoMinimo =    minimumBy (compare `on` totalSinDevoluciones) eventosValidos
+
+                idTxt =   show (idEvento eventoMinimo)
+
+                totalTxt = limpiarFloat (totalSinDevoluciones eventoMinimo)
+
+            in idTxt ++ "," ++ totalTxt
 
 --------------------------------------------------------------------------------
 -- Nombre: esValido
@@ -553,7 +568,7 @@ esValido evento =
 --------------------------------------------------------------------------------
 -- Nombre: totalSinDevoluciones
 -- Entrada:
---   e: evento individual
+--    evento individual
 -- Salida:
 --   total calculado sin devoluciones
 -- Restricciones:
@@ -568,7 +583,14 @@ totalSinDevoluciones evento =
 
 construirTotalesPorCategoria :: [Evento] -> [(Categoria, Float)]
 construirTotalesPorCategoria eventos =
-    let categoriasUnicas = nub (map categoria eventos)
-    in map (\cat ->
-        (cat, sum (map totalAjustado (filter (\e -> categoria e == cat) eventos)))
-        ) categoriasUnicas
+    let categorias = nub (map categoria eventos)
+
+        totalPorCategoria cat =
+
+            let eventosDeCategoria =   filter (\e -> categoria e == cat) eventos
+
+                total =   sum (map totalAjustado eventosDeCategoria)
+
+            in (cat, total)
+
+    in map totalPorCategoria categorias

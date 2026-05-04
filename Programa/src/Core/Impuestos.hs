@@ -5,57 +5,75 @@ import Utils.Calculos
 
 --------------------------------------------------------------------------------
 -- Nombre: aplicarImpuestos
--- Entrada: eventos: lista de registros del sistema con todas las acciones realizadas
--- Salida: lista de eventos donde a las compras se les calcula impuesto y total final
+--
+-- Objetivo: aplica el cálculo de impuestos a todos los eventos de tipo compra
+--
+-- Entradas: lista de eventos del sistema
+--
+-- Salida: lista de eventos con impuestos y totales actualizados
+--
 -- Restricciones:
---   Solo aplica impuestos a eventos de tipo compra
---   Los eventos ya con impuesto no se vuelven a recalcular
+--   - Solo se modifica eventos de tipo Compra
+--   - Los eventos que ya tienen impuesto no se recalculan
 --------------------------------------------------------------------------------
 aplicarImpuestos :: [Evento] -> [Evento]
 aplicarImpuestos = map aplicarImpuestoEvento
 
 --------------------------------------------------------------------------------
 -- Nombre: promedioCompras
--- Entrada: eventos: lista de registros del sistema
--- Salida: promedio del valor total de todas las compras
+--
+-- Objetivo: calcula el promedio del total de todas las compras registradas
+--
+-- Entradas: lista de eventos
+--
+-- Salida: promedio de los montos de compras
+--
 -- Restricciones:
---   Si no hay compras, el resultado puede ser 0 o indefinido según el cálculo interno
+--   - Si no hay compras, el resultado es 0
 --------------------------------------------------------------------------------
 promedioCompras :: [Evento] -> Float
 promedioCompras eventos =
-    let 
+    let
         compras = filtrarCompras eventos
-        sumaTotal = calcularSumaTotales compras
-        totalCompras = contarEventos compras
-
-    in 
-        calcularPromedioLocal sumaTotal totalCompras
+        totalMonto = calcularSumaTotales compras
+        cantidadCompras = contarEventos compras
+    in
+        calcularPromedioLocal totalMonto cantidadCompras
 
 --------------------------------------------------------------------------------
 -- Nombre: aplicarImpuestoEvento
--- Entrada: evento: registro individual del sistema
--- Salida:
---   mismo evento actualizado con impuesto y total si es compra
---   si no es compra, el evento queda igual
+--
+-- Objetivo: aplica impuestos a un evento si corresponde
+--
+-- Entradas: evento individual
+--
+-- Salida: evento actualizado con impuesto y total, o sin cambios
+--
 -- Restricciones:
---   no recalcula impuestos si ya existen
+--   - Si el evento ya tiene impuesto, no se recalcula
 --------------------------------------------------------------------------------
 aplicarImpuestoEvento :: Evento -> Evento
 aplicarImpuestoEvento evento
+    | yaTieneImpuesto evento =
+                                evento
 
-    | yaTieneImpuesto evento = evento
+    | esCompra evento =
+                        calcularImpuestoCompra evento
 
-    | esCompra evento        = calcularImpuestoCompra evento
-
-    | otherwise              = evento { impuesto = 0 }
+    | otherwise =
+                    evento { impuesto = 0 }
 
 --------------------------------------------------------------------------------
 -- Nombre: calcularImpuestoCompra
--- Entrada: evento de tipo compra
--- Salida:
---   evento actualizado con impuesto calculado y total final con impuesto incluido
+--
+-- Objetivo: calcula el impuesto y total final para un evento de compra
+--
+-- Entradas: evento de tipo Compra
+--
+-- Salida: evento con impuesto y total actualizados
+--
 -- Restricciones:
---   solo se usa para eventos de compra
+--   - Solo aplica a eventos de compra
 --------------------------------------------------------------------------------
 calcularImpuestoCompra :: Evento -> Evento
 calcularImpuestoCompra evento =
@@ -70,8 +88,13 @@ calcularImpuestoCompra evento =
 
 --------------------------------------------------------------------------------
 -- Nombre: yaTieneImpuesto
--- Entrada: evento individual
--- Salida: verdadero si el evento ya tiene impuesto aplicado
+--
+-- Objetivo: verifica si un evento ya tiene impuesto aplicado
+--
+-- Entradas: evento individual
+--
+-- Salida: True si ya tiene impuesto, False si no
+--
 -- Restricciones: ninguna
 --------------------------------------------------------------------------------
 yaTieneImpuesto :: Evento -> Bool
@@ -79,18 +102,28 @@ yaTieneImpuesto evento = impuesto evento /= 0
 
 --------------------------------------------------------------------------------
 -- Nombre: esCompra
--- Entrada: evento individual
--- Salida: verdadero si el evento es de tipo compra
--- Restricciones: depende de la categoría del evento
+--
+-- Objetivo: verifica si un evento es de tipo compra
+--
+-- Entradas: evento individual
+--
+-- Salida: True si es compra
+--
+-- Restricciones: depende del campo categoría
 --------------------------------------------------------------------------------
 esCompra :: Evento -> Bool
 esCompra evento = categoria evento == Compra
 
 --------------------------------------------------------------------------------
 -- Nombre: filtrarCompras
--- Entrada: lista de eventos
--- Salida: solo los eventos que son compras
+--
+-- Objetivo: obtiene únicamente los eventos de tipo compra
+--
+-- Entradas: lista de eventos
+--
+-- Salida: lista filtrada de compras
+--
 -- Restricciones: ninguna
 --------------------------------------------------------------------------------
 filtrarCompras :: [Evento] -> [Evento]
-filtrarCompras = filter (\e -> categoria e == Compra)
+filtrarCompras = filter esCompra

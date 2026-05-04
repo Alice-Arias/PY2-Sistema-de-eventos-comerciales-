@@ -6,11 +6,17 @@ import Utils.Calculos
 
 --------------------------------------------------------------------------------
 -- Nombre: etiquetarAltoValor
--- Entrada: eventos: lista de registros del sistema con información de acciones realizadas
--- Salida: lista de eventos donde cada uno queda marcado si tiene un valor alto o no
+--
+-- Objetivo: marca cada evento indicando si su valor es mayor al promedio
+--           de su categoría
+--
+-- Entradas: lista de eventos del sistema
+--
+-- Salida: lista de eventos con el campo "etiqueta" actualizado
+--
 -- Restricciones:
---   Depende del cálculo de promedios por categoría
---   La lista puede estar vacía, en ese caso devuelve una lista vacía
+--   - Depende del cálculo de promedios por categoría
+--   - Si la lista está vacía, retorna una lista vacía
 --------------------------------------------------------------------------------
 etiquetarAltoValor :: [Evento] -> [Evento]
 etiquetarAltoValor eventos =
@@ -21,33 +27,47 @@ etiquetarAltoValor eventos =
 
 --------------------------------------------------------------------------------
 -- Nombre: etiquetarEvento
--- Entrada:
---   promediosPorCategoria: lista con el promedio de valor por cada categoría
---   evento: registro individual del sistema
--- Salida:
---   mismo evento, pero con una etiqueta que indica si su valor es alto o no
+--
+-- Objetivo: asigna a un evento una etiqueta según su valor respecto al promedio
+--
+-- Entradas:
+--   - lista de promedios por categoría
+--   - evento individual
+--
+-- Salida: evento con campo "etiqueta" actualizado
+--
 -- Restricciones:
---   requiere que exista información de promedios calculada previamente
+--   - requiere que existan promedios previamente calculados
 --------------------------------------------------------------------------------
 etiquetarEvento :: [(Categoria, Float)] -> Evento -> Evento
 etiquetarEvento promediosPorCategoria evento = evento { etiqueta = esAltoValor promediosPorCategoria evento }
 
 --------------------------------------------------------------------------------
 -- Nombre: esAltoValor
--- Entrada:
---   promediosPorCategoria: lista con el promedio de valor por categoría
---   evento: registro individual del sistema
+--
+-- Objetivo: determina si el valor de un evento supera el promedio de su categoría
+--
+-- Entradas:
+--   - lista de promedios por categoría
+--   - evento individual
+--
 -- Salida:
---   verdadero si el valor del evento es mayor al promedio de su categoría
---   falso en caso contrario
+--   True si el valor del evento es mayor al promedio de su categoría
+--   False si no lo es o si no existe promedio para la categoría
+--
 -- Restricciones:
---   si no existe promedio para la categoría, se considera como falso
+--   - si la categoría no tiene promedio registrado, se asume False
 --------------------------------------------------------------------------------
 esAltoValor :: [(Categoria, Float)] -> Evento -> Bool
 esAltoValor promediosPorCategoria evento =
-
     case obtenerPromedioCategoria promediosPorCategoria (categoria evento) of
 
-        Nothing       -> False
-        
-        Just promedio -> valor evento > promedio
+        Nothing ->
+
+            False
+
+        Just promedio ->
+
+            let valorEvento = valor evento
+
+            in valorEvento > promedio

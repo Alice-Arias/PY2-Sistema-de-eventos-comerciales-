@@ -312,49 +312,55 @@ reporteImpuestos eventos = do
 reporteEtiquetas :: [Evento] -> IO ()
 reporteEtiquetas eventos = do
 
-    let 
-        eventosConEtiqueta = etiquetarAltoValor eventos
+    let eventosEtiquetados = etiquetarAltoValor eventos
 
-        categoriasUnicas = nub (map categoria eventos)
+        categorias = nub (map categoria eventos)
 
-        promediosPorCategoria = calcularPromedios eventos
+        promedios = calcularPromedios eventos
 
         totalEventos = length eventos
 
-        totalEventosSobrePromedio = length (filter etiqueta eventosConEtiqueta)
+        totalSobrePromedio =
+            length (filter etiqueta eventosEtiquetados)
 
     putStrLn (titulo "\n════════════════════════════════════════")
     putStrLn (subtitulo "        REPORTE DE ETIQUETAS")
     putStrLn (titulo "════════════════════════════════════════")
 
     putStrLn (texto ("Total eventos      : " ++ show totalEventos))
-    putStrLn (okMsg ("Sobre promedio     : " ++ show totalEventosSobrePromedio))
+    putStrLn (okMsg ("Sobre promedio     : " ++ show totalSobrePromedio))
     putStrLn ""
 
-    putStrLn (colorBold magenta
-        (ajustarTexto "Categoría" 15 ++ " | "
+    putStrLn (colorBold magenta $
+        ajustarTexto "Categoría" 15 ++ " | "
         ++ ajustarTexto "Total" 7 ++ " | "
         ++ ajustarTexto "Promedio" 18 ++ " | "
-        ++ "Sobre promedio"))
+        ++ "Sobre promedio")
 
     putStrLn (separador (replicate 65 '-'))
 
-    mapM_ (\categoriaActual ->
-        let eventosCategoria = filter (\evento -> categoria evento == categoriaActual) eventosConEtiqueta
-
-            cantidadCategoria = length eventosCategoria
-
-            cantidadSobrePromedio = length (filter etiqueta eventosCategoria)
-
-            promedioCategoria = obtenerPromedio categoriaActual promediosPorCategoria
-
-        in putStrLn (texto (
-            ajustarTexto (show categoriaActual) 15 ++ " | "
-        ++ ajustarNumero cantidadCategoria 7 ++ " | "
-        ++ ajustarTexto (formatearMonto promedioCategoria) 18 ++ " | "
-        ++ ajustarNumero cantidadSobrePromedio 6)) ) categoriasUnicas
+    mapM_ (mostrarCategoria eventosEtiquetados promedios) categorias
 
     putStrLn (titulo "════════════════════════════════════════")
+
+mostrarCategoria :: [Evento] -> [(Categoria, Float)] -> Categoria -> IO ()
+mostrarCategoria eventosEtiquetados promedios categoriaActual =
+
+    let eventosCategoria =   filter (\e -> categoria e == categoriaActual) eventosEtiquetados
+
+        totalCategoria =  length eventosCategoria
+
+        sobrePromedio =   length (filter etiqueta eventosCategoria)
+
+        promedio =   obtenerPromedio categoriaActual promedios
+
+    in putStrLn $
+        texto (
+            ajustarTexto (show categoriaActual) 15 ++ " | "
+            ++ ajustarNumero totalCategoria 7 ++ " | "
+            ++ ajustarTexto (formatearMonto promedio) 18 ++ " | "
+            ++ ajustarNumero sobrePromedio 6
+        )
 
 --------------------------------------------------------------------------------
 -- Nombre: reporteCompleto
@@ -615,4 +621,13 @@ imprimirResumen eventos = do
 --------------------------------------------------------------------------------
 mostrarPromedioCategoria :: Categoria -> Float -> IO ()
 mostrarPromedioCategoria categoria promedio =
-    putStrLn (texto (ajustarTexto (show categoria) 16) ++ " | " ++ okMsg (formatearMonto promedio))
+    let nombreCategoria = ajustarTexto (show categoria) 16
+
+        promedioFormateado =  formatearMonto promedio
+
+        linea =
+            texto nombreCategoria
+            ++ " | "
+            ++ okMsg promedioFormateado
+
+    in putStrLn linea

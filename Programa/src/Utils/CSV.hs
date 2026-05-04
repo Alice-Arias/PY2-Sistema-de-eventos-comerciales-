@@ -59,8 +59,8 @@ eventoToCSV evento =
 --   - Compara por idEvento
 --------------------------------------------------------------------------------
 existeEvento :: Int -> [Evento] -> Bool
-existeEvento idBuscado = any (\eventoActual -> idEvento eventoActual == idBuscado)
-
+existeEvento idBuscado =
+    any (\e -> idEvento e == idBuscado)
 --------------------------------------------------------------------------------
 -- Nombre: agregarEventoSeguro
 -- Entrada:

@@ -173,9 +173,12 @@ parseFecha textoFecha =
     case split '-' textoFecha of
         [diaTexto, mesTexto, anioTexto]
             | esFechaValida diaTexto mesTexto anioTexto ->
-                Just (toInt anioTexto * 10000 + toInt mesTexto * 100 + toInt diaTexto)
-        _ -> Nothing
+                let dia  = toInt diaTexto
+                    mes  = toInt mesTexto
+                    anio = toInt anioTexto
+                in Just (anio * 10000 + mes * 100 + dia)
 
+        _ -> Nothing
 --------------------------------------------------------------------------------
 --  validarPartesDeFecha
 -- Entrada: día, mes y año como texto
@@ -184,13 +187,25 @@ parseFecha textoFecha =
 --------------------------------------------------------------------------------
 esFechaValida :: String -> String -> String -> Bool
 esFechaValida dd mm yyyy =
+    esFormatoValido dd mm yyyy &&
+    esLongitudValida yyyy &&
+    esRangoValido dd mm
+
+-- Verifica que las partes de la fecha sean numéricas y no estén vacías
+esFormatoValido :: String -> String -> String -> Bool
+esFormatoValido dd mm yyyy =
     soloDigitos dd &&
     soloDigitos mm &&
     soloDigitos yyyy &&
+    not (null dd || null mm || null yyyy)
 
-    not (null dd || null mm || null yyyy) &&
-    length yyyy == 4 &&
+-- Valida que el año tenga exactamente 4 dígitos
+esLongitudValida :: String -> Bool
+esLongitudValida yyyy = length yyyy == 4
 
+-- Verifica rangos básicos de día y mes (sin validación de calendario real)
+esRangoValido :: String -> String -> Bool
+esRangoValido dd mm =
     dentroRango (toInt dd) 1 31 &&
     dentroRango (toInt mm) 1 12
 
@@ -246,8 +261,14 @@ split separador texto = procesar texto ""
 -- Restricciones: las fechas deben ser válidas en formato entero YYYYMMDD
 --------------------------------------------------------------------------------
 filtrarEventosEnRango :: [Evento] -> Int -> Int -> [Evento]
-filtrarEventosEnRango listaEventos fechaInicio fechaFin = filter (\evento -> timestamp evento >= fechaInicio &&  timestamp evento <= fechaFin  ) listaEventos
+filtrarEventosEnRango eventos inicio fin =
+    let dentroDelRango evento =
 
+            timestamp evento >= inicio &&
+
+            timestamp evento <= fin
+
+    in filter dentroDelRango eventos
 --------------------------------------------------------------------------------
 -- Nombre: ordenarEventosPorFecha
 -- Entrada: lista de eventos sin orden
@@ -255,9 +276,9 @@ filtrarEventosEnRango listaEventos fechaInicio fechaFin = filter (\evento -> tim
 -- Restricciones: ninguna
 --------------------------------------------------------------------------------
 ordenarEventosPorFecha :: [Evento] -> [Evento]
-ordenarEventosPorFecha = sortBy (\eventoIzquierdo eventoDerecho ->
-        compare (timestamp eventoIzquierdo) (timestamp eventoDerecho)
-    )
+ordenarEventosPorFecha = sortBy (compare `on` timestamp)
+
+
 --------------------------------------------------------------------------------
 -- Nombre: ordenarFechas
 -- Entrada: dos fechas enteras

@@ -2,7 +2,7 @@ module Services.Analisis.DiaSemanaActivo where
 
 import Types.Modelos
 import Data.List 
-
+import Data.Ord (comparing)
 --------------------------------------------------------------------------------
 -- Nombre: nombreDiaSemana
 -- Entrada: número del día 
@@ -30,7 +30,7 @@ nombreDiaSemana numeroDia =
 --   - Depende del timestamp del evento
 --------------------------------------------------------------------------------
 obtenerIndiceDia :: Evento -> Int
-obtenerIndiceDia evento = timestamp evento `mod` 7
+obtenerIndiceDia evento = timestamp evento `mod` 7 -- el 7 es un número arbitrario para simular días de la semana
 
 
 --------------------------------------------------------------------------------
@@ -41,9 +41,11 @@ obtenerIndiceDia evento = timestamp evento `mod` 7
 --   - Elimina días repetidos automáticamente
 --------------------------------------------------------------------------------
 obtenerDiasUnicos :: [Evento] -> [Int]
-obtenerDiasUnicos eventos = nub (map obtenerIndiceDia eventos)
+obtenerDiasUnicos eventos =
 
+    let dias = map obtenerIndiceDia eventos
 
+    in nub dias
 --------------------------------------------------------------------------------
 -- Nombre: filtrarEventosPorDia
 -- Entrada:
@@ -54,9 +56,11 @@ obtenerDiasUnicos eventos = nub (map obtenerIndiceDia eventos)
 --   - Depende del cálculo de índice de día
 --------------------------------------------------------------------------------
 filtrarEventosPorDia :: Int -> [Evento] -> [Evento]
-filtrarEventosPorDia dia = filter (\evento -> obtenerIndiceDia evento == dia)
+filtrarEventosPorDia dia =
 
-
+    let esDelDia evento = obtenerIndiceDia evento == dia
+    
+    in filter esDelDia
 --------------------------------------------------------------------------------
 -- Nombre: contarEventosPorDia
 -- Entrada:
@@ -67,8 +71,11 @@ filtrarEventosPorDia dia = filter (\evento -> obtenerIndiceDia evento == dia)
 --   - Ninguna
 --------------------------------------------------------------------------------
 contarEventosPorDia :: Int -> [Evento] -> Int
-contarEventosPorDia dia eventos = length (filtrarEventosPorDia dia eventos)
+contarEventosPorDia dia eventos =
 
+    let eventosDelDia = filtrarEventosPorDia dia eventos
+
+    in length eventosDelDia
 
 --------------------------------------------------------------------------------
 -- Nombre: construirResumenDia
@@ -82,8 +89,11 @@ contarEventosPorDia dia eventos = length (filtrarEventosPorDia dia eventos)
 --------------------------------------------------------------------------------
 construirResumenDia :: Int -> [Evento] -> (String, Int)
 construirResumenDia dia eventos =
+
     let nombreDia = nombreDiaSemana dia
+
         cantidadEventos = contarEventosPorDia dia eventos
+
     in (nombreDia, cantidadEventos)
 
 
@@ -97,8 +107,11 @@ construirResumenDia dia eventos =
 --   - Cada día se analiza una sola vez
 --------------------------------------------------------------------------------
 construirResumenGeneral :: [Int] -> [Evento] -> [(String, Int)]
-construirResumenGeneral dias eventos = map (\dia -> construirResumenDia dia eventos) dias
+construirResumenGeneral dias eventos =
 
+    let resumenDia dia = construirResumenDia dia eventos
+
+    in map resumenDia dias
 
 --------------------------------------------------------------------------------
 -- Nombre: diaMasActivo
@@ -111,7 +124,8 @@ construirResumenGeneral dias eventos = map (\dia -> construirResumenDia dia even
 diaMasActivo :: [Evento] -> (String, Int)
 diaMasActivo eventos =
 
-    let diasUnicos = obtenerDiasUnicos eventos
-        resumenPorDia = construirResumenGeneral diasUnicos eventos
-    in 
-        maximumBy (\a b -> compare (snd a) (snd b)) resumenPorDia
+    let dias = obtenerDiasUnicos eventos
+
+        resumen = construirResumenGeneral dias eventos
+
+    in maximumBy (comparing snd) resumen

@@ -4,41 +4,55 @@ import Data.Time
 import Types.Modelos
 
 --------------------------------------------------------------------------------
--- Nombre: listaCategorias
--- Entrada: ninguna, es una lista fija de categorías del sistema
--- Salida: lista de tipos de acciones que puede tener un evento
+-- Nombre: categorias
+--
+-- Objetivo: lista fija de categorías del sistema
+--
+-- Entradas: ninguna
+--
+-- Salida: lista de valores Categoria
+--
 -- Restricciones:
---   No cambia durante la ejecución del programa
+--   - es constante durante toda la ejecución
 --------------------------------------------------------------------------------
 categorias :: [Categoria]
 categorias = [Visualizacion, Apartado, Compra, Devolucion, Seguimiento]
 
 --------------------------------------------------------------------------------
--- Nombre: listaMetodosPago
--- Entrada: ninguna, es una lista fija de métodos de pago disponibles
--- Salida: lista de formas de pago que puede usar un evento
--- Restricciones:
---   Valores definidos de forma estática
+-- Nombre: metodosPago
+--
+-- Objetivo: lista fija de métodos de pago disponibles
+--
+-- Entradas: ninguna
+--
+-- Salida: lista de MetodoPago
 --------------------------------------------------------------------------------
 metodosPago :: [MetodoPago]
 metodosPago = [Tarjeta, Sinpe, Efectivo]
 
 --------------------------------------------------------------------------------
--- Nombre: listaEstadosEvento
--- Entrada: ninguna, es una lista fija de estados posibles de un evento
--- Salida: lista de estados que puede tener un evento
--- Restricciones:
---   No se modifica durante la ejecución
+-- Nombre: estadosEvento
+--
+-- Objetivo: lista fija de estados posibles de un evento
+--
+-- Entradas: ninguna
+--
+-- Salida: lista de Estado
 --------------------------------------------------------------------------------
 estadosEvento :: [Estado]
 estadosEvento = [Pendiente, Completado, Cancelado]
 
 --------------------------------------------------------------------------------
--- Nombre: listaProductos
--- Entrada: ninguna, lista fija de productos del sistema
--- Salida: lista de productos disponibles para asignar a eventos
+-- Nombre: productos
+--
+-- Objetivo: lista fija de productos simulados del sistema
+--
+-- Entradas: ninguna
+--
+-- Salida: lista de productos
+--
 -- Restricciones:
---   Lista estática utilizada para generar datos simulados
+--   - usada únicamente para generación de datos
 --------------------------------------------------------------------------------
 productos :: [Producto]
 productos =
@@ -49,12 +63,17 @@ productos =
     ]
 
 --------------------------------------------------------------------------------
--- Nombre: limitarCantidadEventos
--- Entrada: número entero que representa cantidad de eventos
--- Salida: ajusta la cantidad para que esté entre un mínimo y un máximo
+-- Nombre: limitarCantidad
+--
+-- Objetivo: restringe la cantidad de eventos generados
+--
+-- Entradas: número entero
+--
+-- Salida: número ajustado entre 10 y 25
+--
 -- Restricciones:
---   Si el número es menor a 10 se ajusta a 10
---   Si es mayor a 25 se ajusta a 25
+--   - mínimo 10
+--   - máximo 25
 --------------------------------------------------------------------------------
 limitarCantidad :: Int -> Int
 limitarCantidad n
@@ -63,108 +82,152 @@ limitarCantidad n
     | otherwise = n
 
 --------------------------------------------------------------------------------
--- Nombre: obtenerFechaActualSistema
--- Entrada: ninguna
--- Salida: fecha actual del sistema en formato de día
+-- Nombre: obtenerFechaActual
+--
+-- Objetivo: obtiene la fecha actual del sistema
+--
+-- Entradas: ninguna
+--
+-- Salida: día actual (IO Day)
+--
 -- Restricciones:
---   Depende del reloj del sistema operativo
+--   depende del sistema operativo
 --------------------------------------------------------------------------------
 obtenerFechaActual :: IO Day
-obtenerFechaActual = utctDay <$> getCurrentTime
+obtenerFechaActual = do
+    utctDay <$> getCurrentTime
 
 --------------------------------------------------------------------------------
--- Nombre: obtenerMilisegundosSistema
--- Entrada: ninguna
--- Salida: número entero basado en milisegundos actuales
--- Restricciones:
---   Se usa como valor de ruido para generar variaciones
+-- Nombre: obtenerMilisegundosActuales
+--
+-- Objetivo: obtiene un valor de tiempo en milisegundos para aleatoriedad
+--
+-- Entradas: ninguna
+--
+-- Salida: entero con milisegundos del día
 --------------------------------------------------------------------------------
 obtenerMilisegundosActuales :: IO Int
 obtenerMilisegundosActuales = do
     tiempo <- getCurrentTime
-    return (floor (utctDayTime tiempo * 1000) :: Int)
 
+    let segundosDelDia = utctDayTime tiempo
+        milisegundos = floor (segundosDelDia * 1000)
+
+    return milisegundos
 
 --------------------------------------------------------------------------------
--- Nombre: generarFechaEvento
--- Entrada:
---   fechaBase: fecha inicial desde donde se generan eventos
---   indice: número del evento en la secuencia
--- Salida: fecha generada para el evento en formato numérico YYYYMMDD
+-- Nombre: obtenerFechaEvento
+--
+-- Objetivo: genera una fecha simulada para un evento
+--
+-- Entradas:
+--   - fechaBase: fecha inicial
+--   - indice: identificador del evento
+--
+-- Salida: fecha en formato numérico YYYYMMDD
+--
 -- Restricciones:
---   La fecha generada depende de cálculos aleatorios controlados
+--   generación pseudoaleatoria controlada
 --------------------------------------------------------------------------------
 obtenerFechaEvento :: Day -> Int -> IO Int
 obtenerFechaEvento fechaBase indice = do
     milisegundos <- obtenerMilisegundosActuales
 
     let ruido = milisegundos `mod` 997
+
         desplazamiento = (indice * 41 + indice * indice + ruido * 17) `mod` 730
 
-        nuevaFecha = addDays (fromIntegral desplazamiento) fechaBase
+        fechaDesplazada = addDays (fromIntegral desplazamiento) fechaBase
 
-        (anio, mes, dia) = toGregorian nuevaFecha
+        (anio, mes, dia) = toGregorian fechaDesplazada
 
-    return (fromIntegral anio * 10000 + mes * 100 + dia)
+        fechaFormateada = fromIntegral anio * 10000 + mes * 100 + dia
 
+    return fechaFormateada
 
 --------------------------------------------------------------------------------
--- Nombre: productosConCodigoInterno
--- Entrada: ninguna, lista derivada de productos con códigos internos
--- Salida: pares de código y producto
--- Restricciones:
---   Es una estructura fija generada al iniciar el programa
+-- Nombre: productosConCodigo
+--
+-- Objetivo: asigna códigos internos a productos
+--
+-- Entradas: ninguna
+--
+-- Salida: lista (codigo, producto)
 --------------------------------------------------------------------------------
 productosConCodigo :: [(String, Producto)]
-productosConCodigo = zip (map (\i -> "P" ++ show (200 + i)) [0..]) productos
+productosConCodigo =
+    let generarCodigo i = "P" ++ show (200 + i)
+        codigos = map generarCodigo [0..]
+    in zip codigos productos
 
 --------------------------------------------------------------------------------
--- Nombre: usuariosConCodigoInterno
--- Entrada: ninguna, lista de usuarios simulados del sistema
+-- Nombre: usuariosConCodigo
+--
+-- Objetivo: lista de usuarios simulados del sistema
+--
+-- Entradas: ninguna
+--
 -- Salida: lista de identificadores de usuario
--- Restricciones:
---   Máximo 300 usuarios generados
 --------------------------------------------------------------------------------
 usuariosConCodigo :: [String]
-usuariosConCodigo = map (\i -> "U" ++ show (300 + i)) [0..299]
+usuariosConCodigo =
+    let generarCodigo i = "U" ++ show (300 + i)
+    in map generarCodigo [0..299]
+
 
 --------------------------------------------------------------------------------
--- Nombre: obtenerProductoPorIndice
--- Entrada:
---   indice: número entero usado para seleccionar un producto
--- Salida: producto asociado con un código
--- Restricciones:
---   Usa módulo para evitar desbordamiento de lista
+-- Nombre: obtenerProducto
+--
+-- Objetivo: obtiene un producto de forma cíclica
+--
+-- Entradas: índice
+--
+-- Salida: (código, producto)
 --------------------------------------------------------------------------------
 obtenerProducto :: Int -> (String, Producto)
-obtenerProducto indice = productosConCodigo !! (indice `mod` length productosConCodigo)
+obtenerProducto indice =
+    let limite = length productosConCodigo
+        posicion = indice `mod` limite
+    in productosConCodigo !! posicion
 
 --------------------------------------------------------------------------------
--- Nombre: obtenerUsuarioPorIndice
--- Entrada:
---   indice: número entero usado para seleccionar un usuario
--- Salida: identificador de usuario
--- Restricciones:
---   Selección cíclica de usuarios disponibles
+-- Nombre: obtenerUsuario
+--
+-- Objetivo: obtiene usuario de forma cíclica
+--
+-- Entradas: índice
+--
+-- Salida: usuario
 --------------------------------------------------------------------------------
 obtenerUsuario :: Int -> String
-obtenerUsuario indice = usuariosConCodigo !! (indice `mod` length usuariosConCodigo)
+obtenerUsuario indice =
+    let limite = length usuariosConCodigo
+        posicion = indice `mod` limite
+    in usuariosConCodigo !! posicion
 
 --------------------------------------------------------------------------------
 -- Nombre: generarEventos
--- Entrada:
---   eventosExistentes: lista de eventos ya registrados en el sistema
--- Salida: lista de nuevos eventos generados automáticamente
+--
+-- Objetivo: genera automáticamente nuevos eventos basados en el tamaño actual
+--           del sistema
+--
+-- Entradas:
+--   eventosExistentes: lista de eventos ya registrados
+--
+-- Salida:
+--   lista de eventos nuevos generados (IO [Evento])
+--
 -- Restricciones:
---   La cantidad de eventos generados depende del tamaño actual del sistema
+--   - la cantidad generada depende del tamaño actual del sistema
+--   - usa valores simulados para crear eventos
 --------------------------------------------------------------------------------
 generarEventos :: [Evento] -> IO [Evento]
 generarEventos eventosExistentes = do
     fechaBase <- obtenerFechaActual
 
-    let 
+    let
         cantidadBase = length eventosExistentes
-        
+
         cantidadEventos = limitarCantidad (10 + (cantidadBase `div` 5) `mod` 16)-- Genera entre 10 y 25 eventos dependiendo del tamaño actual
 
         indices = [cantidadBase + 1 .. cantidadBase + cantidadEventos]
@@ -172,13 +235,19 @@ generarEventos eventosExistentes = do
     mapM (crearEvento fechaBase) indices
 
 --------------------------------------------------------------------------------
--- Nombre: crearEventoNuevo
--- Entrada:
---   fechaBase: fecha desde la que se generan eventos
---   indice: identificador del evento
--- Salida: evento completo con todos sus datos generados
+-- Nombre: crearEvento
+--
+-- Objetivo: construye un evento completo con datos simulados
+--
+-- Entradas:
+--   fechaBase: fecha inicial para generar eventos
+--   indice: identificador secuencial del evento
+--
+-- Salida:
+--   evento completo (IO Evento)
+--
 -- Restricciones:
---   El evento se genera con datos simulados basados en cálculos internos
+--   - todos los valores se generan de forma simulada
 --------------------------------------------------------------------------------
 crearEvento :: Day -> Int -> IO Evento
 crearEvento fechaBase indice = do
@@ -187,7 +256,7 @@ crearEvento fechaBase indice = do
 
     milisegundos <- obtenerMilisegundosActuales
 
-    let 
+    let
         idEvento = indice - 1
 
         categoriaEvento = determinarCategoria indice milisegundos idEvento
@@ -227,15 +296,24 @@ crearEvento fechaBase indice = do
         totalFinal)
 
 --------------------------------------------------------------------------------
--- Nombre: determinarCategoriaEvento
--- Entrada: índice, ruido y id del evento
--- Salida: categoría asignada al evento
+-- Nombre: determinarCategoria
+--
+-- Objetivo: asigna una categoría simulada usando un cálculo pseudoaleatorio
+--
+-- Entradas:
+--   indice: posición del evento
+--   ruido: valor aleatorio basado en tiempo
+--   idEvento: identificador del evento
+--
+-- Salida:
+--   categoría del evento
+--
 -- Restricciones:
---   Se basa en cálculo pseudoaleatorio controlado
+--   distribución aproximada por porcentajes
 --------------------------------------------------------------------------------
 determinarCategoria :: Int -> Int -> Int -> Categoria
 determinarCategoria indice ruido idEvento =
-    let 
+    let
         mezcla = indice * 131 + ruido * 97 + idEvento * 53 + (indice `div` 3) * 17
 
         idx = abs mezcla `mod` 100
@@ -248,46 +326,62 @@ determinarCategoria indice ruido idEvento =
         else Devolucion--15%
 
 --------------------------------------------------------------------------------
--- Nombre: seleccionarMetodoPago
--- Entrada: índice numérico
--- Salida: método de pago asignado
--- Restricciones:
---   Selección cíclica
+-- Nombre: seleccionarMetodo
+--
+-- Objetivo: asigna un método de pago de forma cíclica
+--
+-- Entradas: índice
+-- Salida: método de pago
 --------------------------------------------------------------------------------
 seleccionarMetodo :: Int -> MetodoPago
-seleccionarMetodo indice = metodosPago !! (indice `mod` length metodosPago)
+seleccionarMetodo indice =
+    let limite = length metodosPago
+        posicion = indice `mod` limite
+    in metodosPago !! posicion
 
 --------------------------------------------------------------------------------
--- Nombre: seleccionarEstadoEvento
--- Entrada: índice numérico
+-- Nombre: seleccionarEstado
+--
+-- Objetivo: asigna un estado de forma cíclica
+--
+-- Entradas: índice
 -- Salida: estado del evento
--- Restricciones:
---   Selección cíclica
 --------------------------------------------------------------------------------
 seleccionarEstado :: Int -> Estado
-seleccionarEstado indice = estadosEvento !! (indice `mod` length estadosEvento)
+seleccionarEstado indice =
+    let limite = length estadosEvento
+        posicion = indice `mod` limite
+    in estadosEvento !! posicion
 
 --------------------------------------------------------------------------------
--- Nombre: calcularValorEvento
--- Entrada: id, índice y ruido
--- Salida: valor monetario del evento
--- Restricciones:
---   Generación simulada de valores
+-- Nombre: calcularValor
+--
+-- Objetivo: genera un valor monetario simulado para el evento
+--
+-- Entradas:
+--   idEvento, indice, ruido
+--
+-- Salida: valor del evento (Float)
 --------------------------------------------------------------------------------
 calcularValor :: Int -> Int -> Int -> Float
 calcularValor idEvento indice ruido =
-    let 
-        mezcla = idEvento * 131 + indice * 97 + ruido * 19
-        rango = mezcla `mod` 74500
-    in 
-        fromIntegral (max 500 (500 + rango))
+    let mezcla =  idEvento * 131 +  indice * 97 +  ruido * 19
+
+        rango =  mezcla `mod` 74500
+
+        valorFinal =  max 500 (500 + rango)
+
+    in fromIntegral valorFinal
 
 --------------------------------------------------------------------------------
--- Nombre: calcularCantidadEvento
--- Entrada: categoría e índice
--- Salida: cantidad asociada al evento
--- Restricciones:
---   Depende del tipo de evento
+-- Nombre: calcularCantidad
+--
+-- Objetivo: determina la cantidad asociada al evento según su categoría
+--
+-- Entradas:
+--   categoria, indice
+--
+-- Salida: cantidad del evento
 --------------------------------------------------------------------------------
 calcularCantidad :: Categoria -> Int -> Int
 calcularCantidad categoria indice =
@@ -299,11 +393,13 @@ calcularCantidad categoria indice =
         Devolucion    -> 1
 
 --------------------------------------------------------------------------------
--- Nombre: obtenerUltimoIdEvento
--- Entrada: lista de eventos
--- Salida: último id registrado
--- Restricciones:
---   Retorna -1 si no hay eventos
+-- Nombre: obtenerUltimoId
+--
+-- Objetivo: obtiene el último id registrado en la lista de eventos
+--
+-- Entradas: lista de eventos
+--
+-- Salida: último id o -1 si no hay eventos
 --------------------------------------------------------------------------------
 obtenerUltimoId :: [Evento] -> Int
 obtenerUltimoId eventos =

@@ -11,12 +11,17 @@ import Utils.Formato
 
 --------------------------------------------------------------------------------
 -- Nombre: generarEstadisticas
--- Entrada: lista de eventos del sistema
--- Salida:
---   Genera una estadística completa, la guarda en archivo y la muestra en pantalla
+--
+-- Objetivo: genera una estadística completa del sistema, la guarda en CSV
+--           y la muestra en pantalla
+--
+-- Entradas: lista de eventos del sistema
+--
+-- Salida: IO Estadistica con la estructura generada
+--
 -- Restricciones:
---   - Los eventos deben tener datos válidos
---   - Depende de otros módulos de cálculo y formato
+--   - los eventos deben tener datos válidos
+--   - depende de otros módulos de análisis y formato
 --------------------------------------------------------------------------------
 generarEstadisticas :: [Evento] -> IO Estadistica
 generarEstadisticas eventos = do
@@ -34,10 +39,15 @@ generarEstadisticas eventos = do
 
 --------------------------------------------------------------------------------
 -- Nombre: construirEstadistica
--- Entrada: lista de eventos del sistema
--- Salida: estructura final de estadística del sistema
+--
+-- Objetivo: construye la estructura final de estadísticas del sistema
+--
+-- Entradas: lista de eventos
+--
+-- Salida: estructura Estadistica con todos los datos calculados
+--
 -- Restricciones:
---   - Requiere que los eventos tengan información válida
+--   - los eventos deben contener información válida
 --------------------------------------------------------------------------------
 construirEstadistica :: [Evento] -> Estadistica
 construirEstadistica eventos =
@@ -55,51 +65,88 @@ construirEstadistica eventos =
 
 --------------------------------------------------------------------------------
 -- Nombre: generarId
--- Entrada: lista de eventos
--- Salida: número identificador de la estadística
+--
+-- Objetivo: genera un identificador único para la estadística
+--
+-- Entradas: lista de eventos
+--
+-- Salida: número entero como ID
+--
 -- Restricciones: ninguna
 --------------------------------------------------------------------------------
 generarId :: [Evento] -> Int
-generarId eventos = (length eventos * 37 + round (sum (map totalReal eventos))) `mod` 9001
+generarId eventos =
+    let cantidadEventos = length eventos
+
+        sumaTotales =  sum (map totalReal eventos)
+
+        parteEntera = round sumaTotales
+
+        mezcla = cantidadEventos * 37 + parteEntera
+
+    in mezcla `mod` 9001
 
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerFechaActual
--- Entrada: ninguna
--- Salida: fecha fija del sistema
+--
+-- Objetivo: retorna la fecha del sistema usada para la estadística
+--
+-- Entradas: ninguna
+--
+-- Salida: fecha en formato entero
 --------------------------------------------------------------------------------
 obtenerFechaActual :: Int
-obtenerFechaActual = 20260416
+obtenerFechaActual = 20260416 --fecha de asignacion del proyecto 
 
 
 --------------------------------------------------------------------------------
 -- Nombre: contarEventosPorCategoria
--- Entrada: lista de eventos
--- Salida: lista con cantidad de eventos por categoría
--- Restricciones: los eventos deben tener categoría válida
+--
+-- Objetivo: cuenta cuántos eventos hay por cada categoría
+--
+-- Entradas: lista de eventos
+--
+-- Salida: lista de pares (categoría, cantidad)
+--
+-- Restricciones:
+--   - los eventos deben tener categoría válida
 --------------------------------------------------------------------------------
 contarEventosPorCategoria :: [Evento] -> [(String, Int)]
-contarEventosPorCategoria = map (\grupoEventos ->
-            (show (categoria (head grupoEventos)), length grupoEventos)
-        )
-    . groupBy ((==) `on` (show . categoria))
-    . sortBy (compare `on` (show . categoria))
+contarEventosPorCategoria eventos =
+    let ordenar = sortBy (compare `on` categoria) eventos
+
+        agrupar = groupBy ((==) `on` categoria) ordenar
+
+        contar grupo = (show (categoria (head grupo)), length grupo)
+
+    in map contar agrupar
     
 --------------------------------------------------------------------------------
 -- Nombre: buscarCategoria
--- Entrada:
---   nombre de categoría
---   lista de conteos por categoría
+--
+-- Objetivo: obtiene la cantidad de eventos de una categoría específica
+--
+-- Entradas:
+--   - nombre de categoría
+--   - lista de conteos por categoría
+--
 -- Salida: cantidad de eventos de esa categoría
 --------------------------------------------------------------------------------
 buscarCategoria :: String -> [(String, Int)] -> Int
-buscarCategoria categoriaBuscada lista = maybe 0 id (lookup categoriaBuscada lista)
-
+buscarCategoria categoriaBuscada lista =
+    case lookup categoriaBuscada lista of
+        Just valor -> valor
+        Nothing    -> 0
 
 --------------------------------------------------------------------------------
 -- Nombre: resumenCategorias
--- Entrada: lista de eventos
--- Salida: texto con resumen de todas las categorías
+--
+-- Objetivo: genera un resumen textual de todas las categorías
+--
+-- Entradas: lista de eventos
+--
+-- Salida: texto con conteo por categoría
 --------------------------------------------------------------------------------
 resumenCategorias :: [Evento] -> String
 resumenCategorias eventos =
@@ -117,8 +164,14 @@ resumenCategorias eventos =
 
 --------------------------------------------------------------------------------
 -- Nombre: guardarCSV
--- Entrada: lista de eventos y estadística generada
--- Salida: guarda la estadística en un archivo CSV
+--
+-- Objetivo: guarda la estadística generada en un archivo CSV
+--
+-- Entradas:
+--   - lista de eventos
+--   - estadística generada
+--
+-- Salida: IO () que escribe en archivo
 --------------------------------------------------------------------------------
 guardarCSV :: [Evento] -> Estadistica -> IO ()
 guardarCSV eventos estadistica = do
@@ -142,17 +195,27 @@ guardarCSV eventos estadistica = do
 
 --------------------------------------------------------------------------------
 -- Nombre: diaConMasActividad
--- Entrada: lista de eventos
--- Salida: día (timestamp) con más actividad registrada
--- Restricciones: lista no vacía para resultado válido
+--
+-- Objetivo: determina el día con mayor número de eventos registrados
+--
+-- Entradas: lista de eventos
+--
+-- Salida: timestamp del día más activo
+--
+-- Restricciones:
+--   - la lista no debe estar vacía para un resultado válido
 --------------------------------------------------------------------------------
 diaConMasActividad :: [Evento] -> Int
 diaConMasActividad [] = 0
 diaConMasActividad eventos =
-    let
-        fechasOrdenadas = sort (map timestamp eventos)
-        gruposFechas = group fechasOrdenadas
-        conteoDias = map (\g -> (head g, length g)) gruposFechas
-        (dia, _) = maximumBy (compare `on` snd) conteoDias
-    in
-        dia
+    let timestamps = sort (map timestamp eventos)
+
+        grupos = group timestamps
+
+        contarGrupo grupo =  (head grupo, length grupo)
+
+        conteoPorDia = map contarGrupo grupos
+
+        (diaMasActivo, _) = maximumBy (compare `on` snd) conteoPorDia
+
+    in diaMasActivo

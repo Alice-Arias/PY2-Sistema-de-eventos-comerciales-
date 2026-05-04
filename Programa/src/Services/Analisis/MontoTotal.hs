@@ -7,16 +7,16 @@ import Utils.Calculos
 
 --------------------------------------------------------------------------------
 -- Nombre: montoTotal
--- Entrada: lista de eventos del sistema (todas las acciones registradas)
--- Salida:
---   Muestra un resumen del dinero del sistema:
---   - dinero total registrado
---   - dinero perdido por devoluciones
---   - estado de impuestos
---   - lista de compras sin impuesto
---   - total final ya corregido
+--
+-- Objetivo: muestra un resumen financiero general del sistema de eventos
+--           incluyendo ingresos, devoluciones, estado de impuestos y totales
+--
+-- Entradas: lista de eventos del sistema
+--
+-- Salida: IO () con reporte detallado en pantalla
+--
 -- Restricciones:
---   - Puede funcionar con lista vacía (solo mostrará ceros o vacío)
+--   - puede ejecutarse con lista vacía (mostrará valores en cero)
 --------------------------------------------------------------------------------
 montoTotal :: [Evento] -> IO ()
 montoTotal eventos = do
@@ -78,10 +78,15 @@ montoTotal eventos = do
 
 --------------------------------------------------------------------------------
 -- Nombre: calcularTotalCorrecto
--- Entrada: un evento individual
--- Salida: valor real del evento con impuesto incluido si aplica
+--
+-- Objetivo: calcula el total real de un evento incluyendo impuesto si aplica
+--
+-- Entradas: evento individual
+--
+-- Salida: valor final del evento
+--
 -- Restricciones:
---   - Solo aplica impuesto si es una compra
+--   - solo aplica impuesto a eventos de tipo Compra
 --------------------------------------------------------------------------------
 calcularTotalCorrecto :: Evento -> Float
 calcularTotalCorrecto evento =
@@ -98,10 +103,15 @@ calcularTotalCorrecto evento =
 
 --------------------------------------------------------------------------------
 -- Nombre: mostrarEvento
--- Entrada: un evento individual
--- Salida: muestra en pantalla el detalle del evento
+--
+-- Objetivo: muestra el detalle completo de un evento en pantalla
+--
+-- Entradas: evento individual
+--
+-- Salida: IO () con información formateada
+--
 -- Restricciones:
---   - Solo muestra información, no modifica nada
+--   - no modifica datos, solo visualiza información
 --------------------------------------------------------------------------------
 mostrarEvento :: Evento -> IO ()
 mostrarEvento evento = do

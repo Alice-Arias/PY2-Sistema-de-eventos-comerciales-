@@ -7,10 +7,15 @@ import Data.Ord
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerMesDelEvento
--- Entrada: un evento del sistema
--- Salida: nombre del mes y año donde ocurrió ese evento
+--
+-- Objetivo: obtiene el mes y año en el que ocurrió un evento
+--
+-- Entradas: evento del sistema
+--
+-- Salida: mes en formato texto (ej: "05-2026")
+--
 -- Restricciones:
---   - El evento debe tener una fecha válida
+--   - el evento debe tener una fecha válida en su timestamp
 --------------------------------------------------------------------------------
 obtenerMesDelEvento :: Evento -> String
 obtenerMesDelEvento evento = extraerMesAno (timestamp evento)
@@ -18,10 +23,14 @@ obtenerMesDelEvento evento = extraerMesAno (timestamp evento)
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerMesesUnicos
--- Entrada: lista de eventos del sistema
--- Salida: lista de meses sin repetir donde ocurrieron eventos
--- Restricciones:
---   - Puede devolver lista vacía si no hay eventos
+--
+-- Objetivo: obtiene todos los meses únicos en los que ocurrieron eventos
+--
+-- Entradas: lista de eventos
+--
+-- Salida: lista de meses sin repetición
+--
+-- Restricciones: puede devolver lista vacía si no hay eventos
 --------------------------------------------------------------------------------
 obtenerMesesUnicos :: [Evento] -> [String]
 obtenerMesesUnicos eventos = nub (map obtenerMesDelEvento eventos)
@@ -29,25 +38,38 @@ obtenerMesesUnicos eventos = nub (map obtenerMesDelEvento eventos)
 
 --------------------------------------------------------------------------------
 -- Nombre: filtrarEventosPorMes
--- Entrada:
---   mes: mes específico en formato texto
---   eventos: lista de eventos del sistema
--- Salida: eventos que ocurrieron en ese mes
+--
+-- Objetivo: filtra eventos que pertenecen a un mes específico
+--
+-- Entradas:
+--   - mes en formato texto
+--   - lista de eventos
+--
+-- Salida: lista de eventos del mes indicado
+--
 -- Restricciones:
---   - El mes debe coincidir con el formato generado por el sistema
+--   - el formato del mes debe coincidir con el generado por el sistema
 --------------------------------------------------------------------------------
 filtrarEventosPorMes :: String -> [Evento] -> [Evento]
-filtrarEventosPorMes mes = filter (\evento -> obtenerMesDelEvento evento == mes)
+filtrarEventosPorMes mes =
 
+    let esDelMes evento = obtenerMesDelEvento evento == mes
+
+    in filter esDelMes
 
 --------------------------------------------------------------------------------
 -- Nombre: calcularTotalDelMes
--- Entrada:
---   mes: mes a analizar
---   eventos: lista de eventos del sistema
--- Salida: suma total de dinero generado en ese mes
+--
+-- Objetivo: calcula el total de dinero generado en un mes específico
+--
+-- Entradas:
+--   - mes a analizar
+--   - lista de eventos
+--
+-- Salida: suma total de los valores del mes
+--
 -- Restricciones:
---   - Si no hay eventos en el mes, devuelve 0
+--   - si no hay eventos en el mes, el resultado es 0
 --------------------------------------------------------------------------------
 calcularTotalDelMes :: String -> [Evento] -> Float
 calcularTotalDelMes mes eventos =
@@ -59,12 +81,16 @@ calcularTotalDelMes mes eventos =
 
 --------------------------------------------------------------------------------
 -- Nombre: construirResumenDelMes
--- Entrada:
---   mes: mes a analizar
---   eventos: lista de eventos del sistema
--- Salida: par con el mes y su total generado
--- Restricciones:
---   - Ninguna
+--
+-- Objetivo: construye el total generado para un mes específico
+--
+-- Entradas:
+--   - mes
+--   - lista de eventos
+--
+-- Salida: par (mes, total generado)
+--
+-- Restricciones: ninguna
 --------------------------------------------------------------------------------
 construirResumenDelMes :: String -> [Evento] -> (String, Float)
 construirResumenDelMes mes eventos =
@@ -76,24 +102,36 @@ construirResumenDelMes mes eventos =
 
 --------------------------------------------------------------------------------
 -- Nombre: construirResumenMensual
--- Entrada:
---   meses: lista de meses únicos
---   eventos: lista de eventos del sistema
--- Salida: lista de (mes, total generado)
+--
+-- Objetivo: genera un resumen de ingresos por cada mes único
+--
+-- Entradas:
+--   - lista de meses únicos
+--   - lista de eventos
+--
+-- Salida: lista de pares (mes, total)
+--
 -- Restricciones:
---   - Cada mes se analiza una sola vez
+--   - cada mes se evalúa una sola vez
 --------------------------------------------------------------------------------
 construirResumenMensual :: [String] -> [Evento] -> [(String, Float)]
 construirResumenMensual listaMeses eventosSistema =
-    map (\mesActual -> construirResumenDelMes mesActual eventosSistema) listaMeses
-    
+
+    let resumenMes mes = construirResumenDelMes mes eventosSistema
+
+    in map resumenMes listaMeses
+
 --------------------------------------------------------------------------------
 -- Nombre: mesConMayorMonto
--- Entrada: lista de eventos del sistema
--- Salida:
---   mes con mayor dinero generado y el monto total de ese mes
+--
+-- Objetivo: identifica el mes con mayor generación de dinero
+--
+-- Entradas: lista de eventos
+--
+-- Salida: par (mes, monto total)
+--
 -- Restricciones:
---   - La lista no debe estar vacía para obtener resultado correcto
+--   - la lista no debe estar vacía para obtener un resultado válido
 --------------------------------------------------------------------------------
 mesConMayorMonto :: [Evento] -> (String, Float)
 mesConMayorMonto eventos =

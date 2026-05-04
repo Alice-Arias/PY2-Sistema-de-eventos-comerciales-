@@ -15,14 +15,18 @@ import Utils.Colores
 
 --------------------------------------------------------------------------------
 -- Nombre: cicloMenu
--- Entrada:
---   rutaArchivo: ubicación del archivo donde se guardan los eventos
---   eventos: lista de registros del sistema con todas las acciones realizadas
--- Salida:
---   ejecuta el menú principal del sistema en forma de ciclo continuo
+--
+-- Objetivo: controla el flujo principal del sistema mediante un menú interactivo
+--
+-- Entradas:
+--   - rutaArchivo: ubicación del archivo de eventos
+--   - eventos: estado actual del sistema
+--
+-- Salida: IO () con ejecución continua del sistema
+--
 -- Restricciones:
---   el sistema depende de entrada válida del usuario
---   el archivo debe existir o ser accesible
+--   - requiere interacción válida del usuario
+--   - el archivo de eventos debe existir o ser accesible
 --------------------------------------------------------------------------------
 cicloMenu :: FilePath -> [Evento] -> IO ()
 cicloMenu rutaArchivo eventos = do
@@ -35,14 +39,18 @@ cicloMenu rutaArchivo eventos = do
 
 --------------------------------------------------------------------------------
 -- Nombre: manejarOpcion
--- Entrada:
---   rutaArchivo: ubicación del archivo de eventos
---   opcionUsuario: opción seleccionada por el usuario
---   eventos: lista de eventos del sistema
--- Salida:
---   ejecuta la acción correspondiente a la opción elegida
+--
+-- Objetivo: ejecuta la acción correspondiente según la opción del usuario
+--
+-- Entradas:
+--   - rutaArchivo: ubicación del archivo de eventos
+--   - opcionUsuario: opción seleccionada
+--   - eventos: estado actual del sistema
+--
+-- Salida: IO () con la operación seleccionada o retorno al menú
+--
 -- Restricciones:
---   si la opción no es válida, se muestra un error y vuelve al menú
+--   - si la opción es inválida, se muestra error y se reinicia el menú
 --------------------------------------------------------------------------------
 manejarOpcion :: FilePath -> String -> [Evento] -> IO ()
 manejarOpcion rutaArchivo opcionUsuario eventos =
@@ -61,13 +69,14 @@ manejarOpcion rutaArchivo opcionUsuario eventos =
 
 --------------------------------------------------------------------------------
 -- Nombre: opcionTransformar
--- Entrada:
---   rutaArchivo: ubicación del archivo de eventos
---   eventos: lista de registros del sistema
--- Salida:
---   actualiza los eventos, los transforma y los guarda en el archivo
--- Restricciones:
---   requiere acceso al archivo de datos
+--
+-- Objetivo: genera nuevos eventos, los procesa y los guarda en el sistema
+--
+-- Entradas: ruta del archivo y estado actual del sistema
+--
+-- Salida: IO () con sistema actualizado
+--
+-- Restricciones: requiere acceso al archivo de persistencia
 --------------------------------------------------------------------------------
 opcionTransformar :: FilePath -> [Evento] -> IO ()
 opcionTransformar rutaArchivo eventos = do
@@ -78,13 +87,14 @@ opcionTransformar rutaArchivo eventos = do
 
 --------------------------------------------------------------------------------
 -- Nombre: opcionAnalisis
--- Entrada:
---   rutaArchivo: ubicación del archivo de eventos
---   eventos: lista de registros del sistema
--- Salida:
---   muestra análisis general del sistema
--- Restricciones:
---   los eventos deben estar actualizados
+--
+-- Objetivo: ejecuta análisis general sobre los eventos actuales
+--
+-- Entradas: ruta del archivo y eventos actuales
+--
+-- Salida: IO () con resultados en pantalla
+--
+-- Restricciones: los eventos deben estar actualizados
 --------------------------------------------------------------------------------
 opcionAnalisis :: FilePath -> [Evento] -> IO ()
 opcionAnalisis rutaArchivo eventos = do
@@ -94,13 +104,14 @@ opcionAnalisis rutaArchivo eventos = do
 
 --------------------------------------------------------------------------------
 -- Nombre: opcionAnalisisTemporal
--- Entrada:
---   rutaArchivo: ubicación del archivo de eventos
---   eventos: lista de registros del sistema
--- Salida:
---   muestra análisis basado en el tiempo
--- Restricciones:
---   los eventos deben estar actualizados
+--
+-- Objetivo: ejecuta análisis basado en comportamiento temporal de los eventos
+--
+-- Entradas: ruta del archivo y eventos actuales
+--
+-- Salida: IO () con análisis temporal
+--
+-- Restricciones: requiere eventos actualizados
 --------------------------------------------------------------------------------
 opcionAnalisisTemporal :: FilePath -> [Evento] -> IO ()
 opcionAnalisisTemporal rutaArchivo eventos = do
@@ -110,13 +121,15 @@ opcionAnalisisTemporal rutaArchivo eventos = do
 
 --------------------------------------------------------------------------------
 -- Nombre: opcionBusquedaRango
--- Entrada:
---   rutaArchivo: ubicación del archivo de eventos
---   eventos: lista de registros del sistema
--- Salida:
---   muestra eventos filtrados por rango de fechas ingresado por el usuario
+--
+-- Objetivo: filtra y muestra eventos dentro de un rango de fechas ingresado
+--
+-- Entradas: ruta del archivo y eventos actuales
+--
+-- Salida: IO () con resultados filtrados
+--
 -- Restricciones:
---   el usuario debe ingresar fechas válidas
+--   - el usuario debe ingresar fechas válidas
 --------------------------------------------------------------------------------
 opcionBusquedaRango :: FilePath -> [Evento] -> IO ()
 opcionBusquedaRango rutaArchivo eventos = do
@@ -136,13 +149,14 @@ opcionBusquedaRango rutaArchivo eventos = do
 
 --------------------------------------------------------------------------------
 -- Nombre: opcionEstadisticas
--- Entrada:
---   rutaArchivo: ubicación del archivo de eventos
---   eventos: lista de registros del sistema
--- Salida:
---   genera y muestra estadísticas del sistema
--- Restricciones:
---   los eventos deben estar actualizados
+--
+-- Objetivo: genera estadísticas generales del sistema
+--
+-- Entradas: ruta del archivo y eventos actuales
+--
+-- Salida: IO () con reporte estadístico
+--
+-- Restricciones: requiere eventos actualizados
 --------------------------------------------------------------------------------
 opcionEstadisticas :: FilePath -> [Evento] -> IO ()
 opcionEstadisticas rutaArchivo eventos = do
@@ -157,12 +171,14 @@ opcionEstadisticas rutaArchivo eventos = do
 
 --------------------------------------------------------------------------------
 -- Nombre: pedirFechaValida
--- Entrada:
---   mensaje: texto que se muestra al usuario
--- Salida:
---   fecha ingresada en formato correcto
--- Restricciones:
---   el usuario debe ingresar una fecha válida
+--
+-- Objetivo: solicita al usuario una fecha válida en formato dd-mm-yyyy
+--
+-- Entradas: mensaje a mostrar
+--
+-- Salida: fecha válida como String
+--
+-- Restricciones: reintenta hasta que el formato sea correcto
 --------------------------------------------------------------------------------
 pedirFechaValida :: String -> IO String
 pedirFechaValida mensaje = do
@@ -180,13 +196,15 @@ pedirFechaValida mensaje = do
 
 --------------------------------------------------------------------------------
 -- Nombre: actualizarSistema
--- Entrada:
---   rutaArchivo: ubicación del archivo de eventos
---   eventos: lista de registros del sistema
--- Salida:
---   lista actualizada de eventos incluyendo los nuevos generados
+--
+-- Objetivo: genera nuevos eventos y actualiza el archivo del sistema
+--
+-- Entradas: ruta del archivo y eventos actuales
+--
+-- Salida: lista actualizada de eventos
+--
 -- Restricciones:
---   requiere acceso de lectura y escritura del archivo
+--   - requiere lectura y escritura del archivo de eventos
 --------------------------------------------------------------------------------
 actualizarSistema :: FilePath -> [Evento] -> IO [Evento]
 actualizarSistema rutaArchivo eventos = do

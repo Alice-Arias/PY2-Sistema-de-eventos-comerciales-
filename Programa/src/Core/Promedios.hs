@@ -5,11 +5,16 @@ import Utils.Calculos
 
 --------------------------------------------------------------------------------
 -- Nombre: calcularPromedios
--- Entrada: lista de eventos del sistema donde se registran todas las acciones
--- Salida: lista con el promedio de valor por cada categoría de evento
+--
+-- Objetivo: calcula el promedio del valor de los eventos agrupados por categoría
+--
+-- Entradas: lista de eventos del sistema
+--
+-- Salida: lista de pares (categoría, promedio de valor)
+--
 -- Restricciones:
---   - Si no hay eventos, devuelve una lista vacía
---   - Depende de funciones auxiliares de cálculo y filtrado
+--   - Si no hay eventos, se devuelve una lista vacía
+--   - Depende de funciones auxiliares de filtrado y cálculo
 --------------------------------------------------------------------------------
 calcularPromedios :: [Evento] -> [(Categoria, Float)]
 calcularPromedios eventos =
@@ -22,13 +27,17 @@ calcularPromedios eventos =
 
 --------------------------------------------------------------------------------
 -- Nombre: calcularPromedioPorCategoria
--- Entrada:
---   eventos: lista completa de eventos del sistema
---   categoria: tipo de evento que se va a analizar
--- Salida:
---   par que contiene la categoría y su promedio de valor
+--
+-- Objetivo: calcula el promedio del valor de los eventos de una categoría específica
+--
+-- Entradas:
+--   - lista completa de eventos
+--   - categoría a analizar
+--
+-- Salida: par (categoría, promedio de valor)
+--
 -- Restricciones:
---   - Si no hay eventos en esa categoría, el promedio será 0
+--   - Si no hay eventos en la categoría, el promedio es 0
 --------------------------------------------------------------------------------
 calcularPromedioPorCategoria :: [Evento] -> Categoria -> (Categoria, Float)
 calcularPromedioPorCategoria eventos categoriaActual =

@@ -5,10 +5,15 @@ import Data.List
 
 --------------------------------------------------------------------------------
 -- Nombre: ordenarEventosPorFecha
--- Entrada: lista de eventos del sistema
--- Salida: eventos ordenados desde el más antiguo al más reciente
+--
+-- Objetivo: ordena los eventos desde el más antiguo al más reciente según su timestamp
+--
+-- Entradas: lista de eventos
+--
+-- Salida: lista de eventos ordenados cronológicamente
+--
 -- Restricciones:
---   - Los eventos deben tener una fecha válida (timestamp)
+--   - cada evento debe tener un timestamp válido
 --------------------------------------------------------------------------------
 ordenarEventosPorFecha :: [Evento] -> [Evento]
 ordenarEventosPorFecha = sortOn timestamp
@@ -16,10 +21,15 @@ ordenarEventosPorFecha = sortOn timestamp
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerPrimerEvento
--- Entrada: lista de eventos ordenados por fecha
--- Salida: evento más antiguo de la lista
+--
+-- Objetivo: obtiene el evento más antiguo de una lista ordenada
+--
+-- Entradas: lista de eventos ordenados por fecha
+--
+-- Salida: evento más antiguo
+--
 -- Restricciones:
---   - La lista no puede estar vacía
+--   - la lista no puede estar vacía
 --------------------------------------------------------------------------------
 obtenerPrimerEvento :: [Evento] -> Evento
 obtenerPrimerEvento = head
@@ -27,10 +37,15 @@ obtenerPrimerEvento = head
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerUltimoEvento
--- Entrada: lista de eventos ordenados por fecha
--- Salida: evento más reciente de la lista
+--
+-- Objetivo: obtiene el evento más reciente de una lista ordenada
+--
+-- Entradas: lista de eventos ordenados por fecha
+--
+-- Salida: evento más reciente
+--
 -- Restricciones:
---   - La lista no puede estar vacía
+--   - la lista no puede estar vacía
 --------------------------------------------------------------------------------
 obtenerUltimoEvento :: [Evento] -> Evento
 obtenerUltimoEvento = last
@@ -38,13 +53,16 @@ obtenerUltimoEvento = last
 
 --------------------------------------------------------------------------------
 -- Nombre: eventosExtremos
--- Entrada: lista de eventos del sistema
--- Salida:
---   un par de eventos:
---   (evento más antiguo, evento más reciente)
+--
+-- Objetivo: obtiene el evento más antiguo y el más reciente del sistema
+--
+-- Entradas: lista de eventos
+--
+-- Salida: par (evento más antiguo, evento más reciente)
+--
 -- Restricciones:
---   - La lista no debe estar vacía
---   - Si está vacía, el sistema lanza un error
+--   - la lista no debe estar vacía
+--   - si la lista está vacía, se lanza un error
 --------------------------------------------------------------------------------
 eventosExtremos :: [Evento] -> (Evento, Evento)
 eventosExtremos [] = error "No hay eventos para analizar"

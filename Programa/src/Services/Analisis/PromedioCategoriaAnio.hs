@@ -7,11 +7,15 @@ import Utils.Colores
 
 --------------------------------------------------------------------------------
 -- Nombre: promedioCategoriaPorAnio
--- Entrada: lista de eventos del sistema
--- Salida:
---   Muestra en pantalla el promedio de dinero por categoría, separado por año
+--
+-- Objetivo: muestra el promedio de valor por categoría separado por año
+--
+-- Entradas: lista de eventos del sistema
+--
+-- Salida: IO () con resultados impresos en pantalla
+--
 -- Restricciones:
---   - Los eventos deben tener fecha válida para poder agrupar por año
+--   - los eventos deben tener fecha válida para agrupar por año
 --------------------------------------------------------------------------------
 promedioCategoriaPorAnio :: [Evento] -> IO ()
 promedioCategoriaPorAnio eventos = do
@@ -32,14 +36,18 @@ promedioCategoriaPorAnio eventos = do
 
 --------------------------------------------------------------------------------
 -- Nombre: mostrarPromediosPorAnio
--- Entrada:
---   categoriasDisponibles: lista de categorías del sistema
---   eventos: lista de eventos del sistema
---   anio: año específico a analizar
--- Salida:
---   Muestra en pantalla el promedio por categoría en ese año
+--
+-- Objetivo: muestra el promedio por categoría para un año específico
+--
+-- Entradas:
+--   - lista de categorías
+--   - lista de eventos
+--   - año a analizar
+--
+-- Salida: IO () con tabla de promedios
+--
 -- Restricciones:
---   - El año debe existir en los eventos
+--   - el año debe existir en los eventos
 --------------------------------------------------------------------------------
 mostrarPromediosPorAnio :: [Categoria] -> [Evento] -> Integer -> IO ()
 mostrarPromediosPorAnio categoriasDisponibles eventos anio = do

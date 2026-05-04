@@ -4,20 +4,26 @@ import Types.Modelos
 import Types.Fecha
 import Utils.Colores
 import Utils.Formato
-import Data.List (sortBy)
+import Data.List 
 import Utils.Calculos
 import UI.Interfaz
 
 --------------------------------------------------------------------------------
 -- Nombre: buscarPorRangoFechas
--- Entrada:
---   lista de eventos del sistema
---   fecha de inicio en texto (formato dd-mm-yyyy)
---   fecha final en texto (formato dd-mm-yyyy)
--- Salida:
---   Muestra en pantalla los eventos que están dentro del rango de fechas
+--
+-- Objetivo: valida las fechas ingresadas y ejecuta la búsqueda de eventos
+--           dentro de un rango de fechas
+--
+-- Entradas:
+--   - lista de eventos del sistema
+--   - fecha inicial en formato texto (dd-mm-yyyy)
+--   - fecha final en formato texto (dd-mm-yyyy)
+--
+-- Salida: IO () con resultados impresos en pantalla
+--
 -- Restricciones:
---   - Las fechas deben estar en formato válido
+--   - las fechas deben cumplir el formato dd-mm-yyyy
+--   - si el formato es inválido, se muestra un mensaje de error
 --------------------------------------------------------------------------------
 buscarPorRangoFechas :: [Evento] -> String -> String -> IO ()
 buscarPorRangoFechas eventos textoFechaInicio textoFechaFin =
@@ -32,15 +38,20 @@ buscarPorRangoFechas eventos textoFechaInicio textoFechaFin =
 
 --------------------------------------------------------------------------------
 -- Nombre: procesarBusquedaPorFechas
--- Entrada:
---   lista de eventos
---   fecha de inicio en número
---   fecha final en número
---   fechas en texto (solo para mostrar)
--- Salida:
---   imprime los eventos dentro del rango
+--
+-- Objetivo: filtra y muestra los eventos que están dentro de un rango de fechas
+--
+-- Entradas:
+--   - lista de eventos
+--   - fecha inicial (entero)
+--   - fecha final (entero)
+--   - fecha inicial en texto (solo para interfaz)
+--   - fecha final en texto (solo para interfaz)
+--
+-- Salida: IO () con tabla de eventos filtrados
+--
 -- Restricciones:
---   - el rango debe ser válido
+--   - el rango de fechas debe ser válido (inicio <= fin)
 --------------------------------------------------------------------------------
 procesarBusquedaPorFechas :: [Evento] -> Int -> Int -> String -> String -> IO ()
 procesarBusquedaPorFechas eventos fechaInicio fechaFin textoInicio textoFin = do

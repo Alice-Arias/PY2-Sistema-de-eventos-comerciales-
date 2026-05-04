@@ -11,3 +11,5 @@ Número de proyecto: Proyecto #2 Sistema de Eventos Comerciales
 Fecha de entrega: 06/05/2026
 
 Estatus de la entrega: Superior
+
+Link del repo: https://github.com/Alice-Arias/PY2-Sistema-de-eventos-comerciales-.git

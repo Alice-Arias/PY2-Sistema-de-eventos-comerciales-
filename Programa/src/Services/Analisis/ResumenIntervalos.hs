@@ -2,20 +2,22 @@ module Services.Analisis.ResumenIntervalos where
 
 import Types.Modelos
 import Types.Fecha
-import Data.List (nub, sortOn)
+import Data.List 
 import Utils.Formato
 import Utils.Calculos
 
 --------------------------------------------------------------------------------
 -- Nombre: resumenIntervalos
--- Entrada: lista de eventos del sistema
+--
+-- Objetivo: genera un resumen de actividad por mes y año
+--
+-- Entradas: lista de eventos del sistema
+--
 -- Salida:
---   Lista con resumen por cada mes y año:
---   - nombre del periodo (mes y año)
---   - cantidad de eventos
---   - monto total generado
+--   lista de tuplas (periodo, cantidad de eventos, monto total)
+--
 -- Restricciones:
---   - Los eventos deben tener fecha válida
+--   - los eventos deben tener fecha válida
 --------------------------------------------------------------------------------
 resumenIntervalos :: [Evento] -> [(String, Int, Float)]
 resumenIntervalos eventos =
@@ -27,27 +29,32 @@ resumenIntervalos eventos =
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerPeriodosOrdenados
--- Entrada: lista de eventos del sistema
--- Salida:
---   lista de (año, mes) sin repetir, ordenada del más antiguo al más reciente
+--
+-- Objetivo: obtiene los periodos (año, mes) sin repetir y ordenados
+--
+-- Entradas: lista de eventos
+--
+-- Salida: lista ordenada de pares (año, mes)
+--
 -- Restricciones:
---   - depende de que los eventos tengan fecha válida
+--   - requiere fechas válidas en los eventos
 --------------------------------------------------------------------------------
 obtenerPeriodosOrdenados :: [Evento] -> [(Int, Int)]
 obtenerPeriodosOrdenados eventos =
-    let 
-        periodosSinRepetir = obtenerPeriodosUnicos eventos
-    in 
-        sortOn (\(anio, mes) -> (anio, mes)) periodosSinRepetir
+    let periodos = obtenerPeriodosUnicos eventos
+    in sortOn (\(anio, mes) -> (anio, mes)) periodos
 
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerPeriodosUnicos
--- Entrada: lista de eventos del sistema
--- Salida:
---   lista de (año, mes) sin repetir
--- Restricciones:
---   - elimina duplicados automáticamente
+--
+-- Objetivo: obtiene todos los (año, mes) sin repetición
+--
+-- Entradas: lista de eventos
+--
+-- Salida: lista sin duplicados
+--
+-- Restricciones: ninguna
 --------------------------------------------------------------------------------
 obtenerPeriodosUnicos :: [Evento] -> [(Int, Int)]
 obtenerPeriodosUnicos eventos = nub [ (extraerAnio evento, extraerMes evento) | evento <- eventos ]
@@ -55,16 +62,17 @@ obtenerPeriodosUnicos eventos = nub [ (extraerAnio evento, extraerMes evento) | 
 
 --------------------------------------------------------------------------------
 -- Nombre: calcularResumenDePeriodo
--- Entrada:
---   lista de eventos del sistema
---   un periodo (año, mes)
--- Salida:
---   resumen del periodo:
---   - nombre del mes y año
---   - cantidad de eventos
---   - dinero total generado
+--
+-- Objetivo: genera el resumen completo de un periodo específico
+--
+-- Entradas:
+--   - lista de eventos
+--   - periodo (año, mes)
+--
+-- Salida: (nombre del periodo, cantidad, monto total)
+--
 -- Restricciones:
---   - el periodo debe existir dentro de los eventos
+--   - el periodo debe existir en los eventos
 --------------------------------------------------------------------------------
 calcularResumenDePeriodo :: [Evento] -> (Int, Int) -> (String, Int, Float)
 calcularResumenDePeriodo eventos (anio, mes) =
@@ -79,13 +87,22 @@ calcularResumenDePeriodo eventos (anio, mes) =
 
 --------------------------------------------------------------------------------
 -- Nombre: filtrarEventosPorPeriodo
--- Entrada:
---   lista de eventos
---   año y mes específico
--- Salida:
---   eventos que pertenecen a ese mes y año
+--
+-- Objetivo: filtra eventos por año y mes
+--
+-- Entradas:
+--   - lista de eventos
+--   - año
+--   - mes
+--
+-- Salida: eventos que coinciden con ese periodo
+--
 -- Restricciones:
---   - comparación basada en fecha del evento
+--   - depende de que los timestamps sean válidos
 --------------------------------------------------------------------------------
 filtrarEventosPorPeriodo :: [Evento] -> Int -> Int -> [Evento]
-filtrarEventosPorPeriodo eventos anio mes = filter (\evento -> extraerAnio evento == anio && extraerMes evento == mes) eventos
+filtrarEventosPorPeriodo eventos anio mes =
+    let coincidePeriodo evento =
+            extraerAnio evento == anio &&
+            extraerMes evento == mes
+    in filter coincidePeriodo eventos

@@ -13,7 +13,7 @@ data Categoria = Visualizacion
     | Compra
     | Devolucion
     | Seguimiento
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq,Ord)
 
 --------------------------------------------------------------------------------
 -- Nombre: Estadistica
