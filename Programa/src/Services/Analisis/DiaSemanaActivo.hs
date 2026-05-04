@@ -1,8 +1,15 @@
 module Services.Analisis.DiaSemanaActivo where
 
-import Types.Evento
-import Data.List (nub, maximumBy)
+import Types.Modelos
+import Data.List 
 
+--------------------------------------------------------------------------------
+-- Nombre: nombreDiaSemana
+-- Entrada: número del día 
+-- Salida: nombre del día de la semana en texto
+-- Restricciones:
+--   - Si el número no coincide con 1–6, se considera domingo por defecto
+--------------------------------------------------------------------------------
 nombreDiaSemana :: Int -> String
 nombreDiaSemana numeroDia =
     case numeroDia of
@@ -14,40 +21,97 @@ nombreDiaSemana numeroDia =
         6 -> "Sábado"
         _ -> "Domingo"
 
+
+--------------------------------------------------------------------------------
+-- Nombre: obtenerIndiceDia
+-- Entrada: evento del sistema
+-- Salida: número que representa el día de la semana del evento
+-- Restricciones:
+--   - Depende del timestamp del evento
+--------------------------------------------------------------------------------
 obtenerIndiceDia :: Evento -> Int
 obtenerIndiceDia evento = timestamp evento `mod` 7
 
+
+--------------------------------------------------------------------------------
+-- Nombre: obtenerDiasUnicos
+-- Entrada: lista de eventos del sistema
+-- Salida: lista de días únicos en los que ocurrieron eventos
+-- Restricciones:
+--   - Elimina días repetidos automáticamente
+--------------------------------------------------------------------------------
 obtenerDiasUnicos :: [Evento] -> [Int]
 obtenerDiasUnicos eventos = nub (map obtenerIndiceDia eventos)
 
 
+--------------------------------------------------------------------------------
+-- Nombre: filtrarEventosPorDia
+-- Entrada:
+--   dia: número del día de la semana
+--   eventos: lista de eventos del sistema
+-- Salida: lista de eventos que ocurrieron en ese día
+-- Restricciones:
+--   - Depende del cálculo de índice de día
+--------------------------------------------------------------------------------
 filtrarEventosPorDia :: Int -> [Evento] -> [Evento]
 filtrarEventosPorDia dia = filter (\evento -> obtenerIndiceDia evento == dia)
 
+
+--------------------------------------------------------------------------------
+-- Nombre: contarEventosPorDia
+-- Entrada:
+--   dia: número del día de la semana
+--   eventos: lista de eventos del sistema
+-- Salida: cantidad total de eventos en ese día
+-- Restricciones:
+--   - Ninguna
+--------------------------------------------------------------------------------
 contarEventosPorDia :: Int -> [Evento] -> Int
 contarEventosPorDia dia eventos = length (filtrarEventosPorDia dia eventos)
 
 
+--------------------------------------------------------------------------------
+-- Nombre: construirResumenDia
+-- Entrada:
+--   dia: número del día
+--   eventos: lista de eventos del sistema
+-- Salida:
+--   par con nombre del día y cantidad de eventos ocurridos
+-- Restricciones:
+--   - Usa conversión de número a nombre de día
+--------------------------------------------------------------------------------
 construirResumenDia :: Int -> [Evento] -> (String, Int)
 construirResumenDia dia eventos =
-    let
-        nombreDia = nombreDiaSemana dia
+    let nombreDia = nombreDiaSemana dia
         cantidadEventos = contarEventosPorDia dia eventos
-    in
-        (nombreDia, cantidadEventos)
+    in (nombreDia, cantidadEventos)
 
 
+--------------------------------------------------------------------------------
+-- Nombre: construirResumenGeneral
+-- Entrada:
+--   dias: lista de días encontrados en el sistema
+--   eventos: lista de eventos del sistema
+-- Salida: lista con resumen de actividad por día
+-- Restricciones:
+--   - Cada día se analiza una sola vez
+--------------------------------------------------------------------------------
 construirResumenGeneral :: [Int] -> [Evento] -> [(String, Int)]
-construirResumenGeneral dias eventos =
-    map (\dia -> construirResumenDia dia eventos) dias
+construirResumenGeneral dias eventos = map (\dia -> construirResumenDia dia eventos) dias
 
 
+--------------------------------------------------------------------------------
+-- Nombre: diaMasActivo
+-- Entrada: lista de eventos del sistema
+-- Salida:
+--   día de la semana con más eventos y la cantidad total
+-- Restricciones:
+--   - La lista no debería estar vacía para obtener resultado correcto
+--------------------------------------------------------------------------------
 diaMasActivo :: [Evento] -> (String, Int)
 diaMasActivo eventos =
-    let
-        diasUnicos = obtenerDiasUnicos eventos
 
+    let diasUnicos = obtenerDiasUnicos eventos
         resumenPorDia = construirResumenGeneral diasUnicos eventos
-
-    in
+    in 
         maximumBy (\a b -> compare (snd a) (snd b)) resumenPorDia

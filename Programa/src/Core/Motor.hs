@@ -1,108 +1,196 @@
 module Core.Motor where
 
-import UI.Menu
-import Services.GeneradorEventos
-import Types.Evento
-import Utils.CSV
-import UI.MenuTransformacion (menuTransformacion)
-import UI.MenuAnalisisTemporal (menuAnalisisTemporal)
-import UI.MenuAnalisis (menuAnalisis)
-import Services.BusquedaRangFechas (buscarPorRangoFechas)
-import Utils.FechaSegura (parseFecha)
-import Utils.Colores
-import Services.Estadisticas (generarEstadisticas)
+import UI.Menus
 
+import Services.GeneradorEventos
+import Services.BusquedaRangFechas
+import Services.Estadisticas
+
+import Types.Modelos
+import Types.Fecha
+
+import UI.Interfaz
+import Utils.CSV
+import Utils.Colores
+
+--------------------------------------------------------------------------------
+-- Nombre: cicloMenu
+-- Entrada:
+--   rutaArchivo: ubicación del archivo donde se guardan los eventos
+--   eventos: lista de registros del sistema con todas las acciones realizadas
+-- Salida:
+--   ejecuta el menú principal del sistema en forma de ciclo continuo
+-- Restricciones:
+--   el sistema depende de entrada válida del usuario
+--   el archivo debe existir o ser accesible
+--------------------------------------------------------------------------------
 cicloMenu :: FilePath -> [Evento] -> IO ()
 cicloMenu rutaArchivo eventos = do
+
     mostrarMenu
-    opcion <- pedirOpcionUsuario
-    manejarOpcion rutaArchivo opcion eventos
 
+    opcionUsuario <- pedirOpcionUsuario
 
+    manejarOpcion rutaArchivo opcionUsuario eventos
+
+--------------------------------------------------------------------------------
+-- Nombre: manejarOpcion
+-- Entrada:
+--   rutaArchivo: ubicación del archivo de eventos
+--   opcionUsuario: opción seleccionada por el usuario
+--   eventos: lista de eventos del sistema
+-- Salida:
+--   ejecuta la acción correspondiente a la opción elegida
+-- Restricciones:
+--   si la opción no es válida, se muestra un error y vuelve al menú
+--------------------------------------------------------------------------------
 manejarOpcion :: FilePath -> String -> [Evento] -> IO ()
-manejarOpcion ruta opcion eventos =
-    case opcion of
+manejarOpcion rutaArchivo opcionUsuario eventos =
+    case opcionUsuario of
 
-        "1" -> opcionTransformar ruta eventos
-
-        "2" -> opcionAnalisis ruta eventos
-
-        "3" -> opcionAnalisisTemporal ruta eventos
-
-        "4" -> opcionBusquedaRango ruta eventos
-
-        "5" -> opcionEstadisticas ruta eventos
-
-        "6" -> mostrarSalidaSistema
+        "1" -> opcionTransformar rutaArchivo eventos
+        "2" -> opcionAnalisis rutaArchivo eventos
+        "3" -> opcionAnalisisTemporal rutaArchivo eventos
+        "4" -> opcionBusquedaRango rutaArchivo eventos
+        "5" -> opcionEstadisticas rutaArchivo eventos
+        "6" -> mostrarSalidaSistema >> return ()
 
         _   -> do
             mostrarError
-            cicloMenu ruta eventos
+            cicloMenu rutaArchivo eventos
 
-
-
+--------------------------------------------------------------------------------
+-- Nombre: opcionTransformar
+-- Entrada:
+--   rutaArchivo: ubicación del archivo de eventos
+--   eventos: lista de registros del sistema
+-- Salida:
+--   actualiza los eventos, los transforma y los guarda en el archivo
+-- Restricciones:
+--   requiere acceso al archivo de datos
+--------------------------------------------------------------------------------
 opcionTransformar :: FilePath -> [Evento] -> IO ()
-opcionTransformar ruta eventos = do
-    eventosActualizados <- actualizarSistema ruta eventos
+opcionTransformar rutaArchivo eventos = do
+    eventosActualizados <- actualizarSistema rutaArchivo eventos
     eventosTransformados <- menuTransformacion eventosActualizados
-    guardarEventos ruta eventosTransformados
-    cicloMenu ruta eventosTransformados
+    guardarEventos rutaArchivo eventosTransformados
+    cicloMenu rutaArchivo eventosTransformados
 
-
-opcionAnalisisTemporal :: FilePath -> [Evento] -> IO ()
-opcionAnalisisTemporal ruta eventos = do
-    eventosActualizados <- actualizarSistema ruta eventos
-    menuAnalisisTemporal ruta eventosActualizados
-    cicloMenu ruta eventosActualizados
-
+--------------------------------------------------------------------------------
+-- Nombre: opcionAnalisis
+-- Entrada:
+--   rutaArchivo: ubicación del archivo de eventos
+--   eventos: lista de registros del sistema
+-- Salida:
+--   muestra análisis general del sistema
+-- Restricciones:
+--   los eventos deben estar actualizados
+--------------------------------------------------------------------------------
 opcionAnalisis :: FilePath -> [Evento] -> IO ()
-opcionAnalisis ruta eventos = do
-    eventosActualizados <- actualizarSistema ruta eventos
-    menuAnalisis ruta eventosActualizados
-    cicloMenu ruta eventosActualizados
+opcionAnalisis rutaArchivo eventos = do
+    eventosActualizados <- actualizarSistema rutaArchivo eventos
+    menuAnalisis rutaArchivo eventosActualizados
+    cicloMenu rutaArchivo eventosActualizados
 
+--------------------------------------------------------------------------------
+-- Nombre: opcionAnalisisTemporal
+-- Entrada:
+--   rutaArchivo: ubicación del archivo de eventos
+--   eventos: lista de registros del sistema
+-- Salida:
+--   muestra análisis basado en el tiempo
+-- Restricciones:
+--   los eventos deben estar actualizados
+--------------------------------------------------------------------------------
+opcionAnalisisTemporal :: FilePath -> [Evento] -> IO ()
+opcionAnalisisTemporal rutaArchivo eventos = do
+    eventosActualizados <- actualizarSistema rutaArchivo eventos
+    menuAnalisisTemporal rutaArchivo eventosActualizados
+    cicloMenu rutaArchivo eventosActualizados
+
+--------------------------------------------------------------------------------
+-- Nombre: opcionBusquedaRango
+-- Entrada:
+--   rutaArchivo: ubicación del archivo de eventos
+--   eventos: lista de registros del sistema
+-- Salida:
+--   muestra eventos filtrados por rango de fechas ingresado por el usuario
+-- Restricciones:
+--   el usuario debe ingresar fechas válidas
+--------------------------------------------------------------------------------
 opcionBusquedaRango :: FilePath -> [Evento] -> IO ()
-opcionBusquedaRango ruta eventos = do
-    eventosActualizados <- actualizarSistema ruta eventos
+opcionBusquedaRango rutaArchivo eventos = do
+    eventosActualizados <- actualizarSistema rutaArchivo eventos
+
     putStrLn (titulo "========================================")
     putStrLn (titulo "   BÚSQUEDA POR RANGO DE FECHAS")
     putStrLn (titulo "========================================")
-    inicio <- pedirFechaValida "Ingrese fecha inicio : "
-    fin    <- pedirFechaValida "Ingrese fecha fin : "
+
+    fechaInicio <- pedirFechaValida "Ingrese fecha de inicio: "
+    fechaFin <- pedirFechaValida "Ingrese fecha final: "
+
     putStrLn (separador "========================================")
-    buscarPorRangoFechas eventosActualizados inicio fin
-    cicloMenu ruta eventosActualizados
 
+    buscarPorRangoFechas eventosActualizados fechaInicio fechaFin
+    cicloMenu rutaArchivo eventosActualizados
 
-pedirFechaValida :: String -> IO String
-pedirFechaValida mensaje = do
-    putStrLn (inputMsg mensaje)
-    entrada <- getLine
-    case parseFecha entrada of
-        Just _  -> return entrada
-        Nothing -> do
-            putStrLn (errorMsg "Formato inválido. Usa dd-mm-yyyy")
-            pedirFechaValida mensaje
-
+--------------------------------------------------------------------------------
+-- Nombre: opcionEstadisticas
+-- Entrada:
+--   rutaArchivo: ubicación del archivo de eventos
+--   eventos: lista de registros del sistema
+-- Salida:
+--   genera y muestra estadísticas del sistema
+-- Restricciones:
+--   los eventos deben estar actualizados
+--------------------------------------------------------------------------------
 opcionEstadisticas :: FilePath -> [Evento] -> IO ()
-opcionEstadisticas ruta eventos = do
-
-    eventosActualizados <- actualizarSistema ruta eventos
+opcionEstadisticas rutaArchivo eventos = do
+    eventosActualizados <- actualizarSistema rutaArchivo eventos
 
     putStrLn (titulo "========================================")
     putStrLn (titulo "   GENERANDO ESTADÍSTICAS")
     putStrLn (titulo "========================================")
 
     _ <- generarEstadisticas eventosActualizados
+    cicloMenu rutaArchivo eventosActualizados
 
-    cicloMenu ruta eventosActualizados
--- =========================
--- LÓGICA SISTEMA
--- =========================
+--------------------------------------------------------------------------------
+-- Nombre: pedirFechaValida
+-- Entrada:
+--   mensaje: texto que se muestra al usuario
+-- Salida:
+--   fecha ingresada en formato correcto
+-- Restricciones:
+--   el usuario debe ingresar una fecha válida
+--------------------------------------------------------------------------------
+pedirFechaValida :: String -> IO String
+pedirFechaValida mensaje = do
 
+    putStrLn (inputMsg mensaje)
+    entradaUsuario <- getLine
+
+    case parseFecha entradaUsuario of
+
+        Just _  -> return entradaUsuario
+
+        Nothing -> do
+            putStrLn (errorMsg "Formato inválido. Usa dd-mm-yyyy")
+            pedirFechaValida mensaje
+
+--------------------------------------------------------------------------------
+-- Nombre: actualizarSistema
+-- Entrada:
+--   rutaArchivo: ubicación del archivo de eventos
+--   eventos: lista de registros del sistema
+-- Salida:
+--   lista actualizada de eventos incluyendo los nuevos generados
+-- Restricciones:
+--   requiere acceso de lectura y escritura del archivo
+--------------------------------------------------------------------------------
 actualizarSistema :: FilePath -> [Evento] -> IO [Evento]
-actualizarSistema ruta eventos = do
+actualizarSistema rutaArchivo eventos = do
     nuevosEventos <- generarEventos eventos
-    mapM_ (agregarEventoSeguro ruta) nuevosEventos
+    mapM_ (agregarEventoSeguro rutaArchivo) nuevosEventos
     mostrarResumenActualizacion (length nuevosEventos)
-    leerEventosSeguro ruta
+    leerEventosSeguro rutaArchivo

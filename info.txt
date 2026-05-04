@@ -1,0 +1,13 @@
+Nombre del curso: Lenguajes de Programación
+
+Semestre y año lectivo: I Semestre 2026
+
+Nombre del estudiante: Alice Arias Salazar
+
+Número de carnet: 2023104639
+
+Número de proyecto: Proyecto #2 Sistema de Eventos Comerciales
+
+Fecha de entrega: 06/05/2026
+
+Estatus de la entrega: Superior

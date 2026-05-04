@@ -1,184 +1,158 @@
 module Services.Estadisticas where
 
-import Types.Evento
-import Types.Estadisticas
-import Data.List
-import Data.Function (on)
+import Types.Modelos
+import Types.Fecha
+import Data.List 
+import Data.Function 
+import UI.Interfaz
 import Utils.Colores
-import Utils.Formato (formatearMonto)
-import Text.Read (readMaybe)
+import Utils.Calculos
+import Utils.Formato
 
+--------------------------------------------------------------------------------
+-- Nombre: generarEstadisticas
+-- Entrada: lista de eventos del sistema
+-- Salida:
+--   Genera una estadística completa, la guarda en archivo y la muestra en pantalla
+-- Restricciones:
+--   - Los eventos deben tener datos válidos
+--   - Depende de otros módulos de cálculo y formato
+--------------------------------------------------------------------------------
 generarEstadisticas :: [Evento] -> IO Estadistica
 generarEstadisticas eventos = do
 
-    let nuevoId = generarId eventos
-        fecha = obtenerFechaActual
+    let 
+        estadisticaFinal = construirEstadistica eventos
 
-        cat = resumenCategorias eventos
-        maxE = eventoMaxCSV eventos
-        minE = eventoMinCSV eventos
-        dia  = calcularDiaMasActivo eventos
+    guardarCSV eventos estadisticaFinal
 
-        estadistica = Estadistica
-            nuevoId
-            fecha
-            cat
-            maxE
-            minE
-            dia
+    putStrLn (okMsg "Estadística generada correctamente")
+    mostrarEstadistica eventos estadisticaFinal
 
-    guardarCSV eventos estadistica
-
-    putStrLn (okMsg " Estadística generada correctamente")
-    mostrarEstadistica eventos estadistica
-
-    return estadistica
+    return estadisticaFinal
 
 
+--------------------------------------------------------------------------------
+-- Nombre: construirEstadistica
+-- Entrada: lista de eventos del sistema
+-- Salida: estructura final de estadística del sistema
+-- Restricciones:
+--   - Requiere que los eventos tengan información válida
+--------------------------------------------------------------------------------
+construirEstadistica :: [Evento] -> Estadistica
+construirEstadistica eventos =
+    let 
+        idEstadistica = generarId eventos
+    in 
+        Estadistica
+        idEstadistica
+        obtenerFechaActual
+        (resumenCategorias eventos)
+        (eventoMaxCSV eventos)
+        (eventoMinCSV eventos)
+        (show (diaConMasActividad eventos))
 
+
+--------------------------------------------------------------------------------
+-- Nombre: generarId
+-- Entrada: lista de eventos
+-- Salida: número identificador de la estadística
+-- Restricciones: ninguna
+--------------------------------------------------------------------------------
 generarId :: [Evento] -> Int
-generarId eventos =
-    (length eventos * 37 + round (sum (map totalReal eventos))) `mod` 9001
+generarId eventos = (length eventos * 37 + round (sum (map totalReal eventos))) `mod` 9001
 
+
+--------------------------------------------------------------------------------
+-- Nombre: obtenerFechaActual
+-- Entrada: ninguna
+-- Salida: fecha fija del sistema
+--------------------------------------------------------------------------------
 obtenerFechaActual :: Int
-obtenerFechaActual = 20260501
+obtenerFechaActual = 20260416
 
 
-
-totalReal :: Evento -> Float
-totalReal e =
-    (valor e * fromIntegral (cantidad e)) + impuesto e
-
-limpiarFloat :: Float -> String
-limpiarFloat = show
-
-
-
-contarPorCategoria :: [Evento] -> [(String, Int)]
-contarPorCategoria =
-    map (\xs -> (show (categoria (head xs)), length xs))
+--------------------------------------------------------------------------------
+-- Nombre: contarEventosPorCategoria
+-- Entrada: lista de eventos
+-- Salida: lista con cantidad de eventos por categoría
+-- Restricciones: los eventos deben tener categoría válida
+--------------------------------------------------------------------------------
+contarEventosPorCategoria :: [Evento] -> [(String, Int)]
+contarEventosPorCategoria =
+    map (\grupo -> (show (categoria (head grupo)), length grupo))
     . groupBy ((==) `on` (show . categoria))
     . sortBy (compare `on` (show . categoria))
 
-extraerCategoria :: String -> [(String, Int)] -> Int
-extraerCategoria cat xs = maybe 0 id (lookup cat xs)
 
+--------------------------------------------------------------------------------
+-- Nombre: buscarCategoria
+-- Entrada:
+--   nombre de categoría
+--   lista de conteos por categoría
+-- Salida: cantidad de eventos de esa categoría
+--------------------------------------------------------------------------------
+buscarCategoria :: String -> [(String, Int)] -> Int
+buscarCategoria categoriaBuscada lista = maybe 0 id (lookup categoriaBuscada lista)
+
+
+--------------------------------------------------------------------------------
+-- Nombre: resumenCategorias
+-- Entrada: lista de eventos
+-- Salida: texto con resumen de todas las categorías
+--------------------------------------------------------------------------------
 resumenCategorias :: [Evento] -> String
 resumenCategorias eventos =
-    let cats = contarPorCategoria eventos
-    in unlines
-        [ "Apartado:      " ++ show (extraerCategoria "Apartado" cats)
-        , "Compra:        " ++ show (extraerCategoria "Compra" cats)
-        , "Devolución:    " ++ show (extraerCategoria "Devolucion" cats)
-        , "Seguimiento:   " ++ show (extraerCategoria "Seguimiento" cats)
-        , "Visualización: " ++ show (extraerCategoria "Visualizacion" cats)
+    let 
+        resumen = contarEventosPorCategoria eventos
+    in 
+        unlines
+        [ "Apartado:      " ++ show (buscarCategoria "Apartado" resumen)
+        , "Compra:        " ++ show (buscarCategoria "Compra" resumen)
+        , "Devolución:    " ++ show (buscarCategoria "Devolucion" resumen)
+        , "Seguimiento:   " ++ show (buscarCategoria "Seguimiento" resumen)
+        , "Visualización: " ++ show (buscarCategoria "Visualizacion" resumen)
         ]
 
 
-
-eventoMaxCSV :: [Evento] -> String
-eventoMaxCSV eventos =
-    let e = maximumBy (compare `on` totalReal) eventos
-    in show (idEvento e) ++ "," ++ limpiarFloat (totalReal e)
-
-eventoMinCSV :: [Evento] -> String
-eventoMinCSV eventos =
-    let e = minimumBy (compare `on` totalReal) eventos
-    in show (idEvento e) ++ "," ++ limpiarFloat (totalReal e)
-
-
-
-calcularDiaMasActivo :: [Evento] -> String
-calcularDiaMasActivo eventos =
-    fst (maximumBy (compare `on` snd) (contarDias eventos))
-
-contarDias :: [Evento] -> [(String, Int)]
-contarDias eventos =
-    map (\xs -> (formatearFecha (timestamp (head xs)), length xs))
-    . groupBy ((==) `on` (formatearFecha . timestamp))
-    . sortBy (compare `on` (formatearFecha . timestamp))
-    $ eventos
-
-formatearFecha :: Int -> String
-formatearFecha f =
-    let s = show f
-    in if length s == 8
-        then take 4 s ++ "-" ++ take 2 (drop 4 s) ++ "-" ++ drop 6 s
-        else s
-
-
-
+--------------------------------------------------------------------------------
+-- Nombre: guardarCSV
+-- Entrada: lista de eventos y estadística generada
+-- Salida: guarda la estadística en un archivo CSV
+--------------------------------------------------------------------------------
 guardarCSV :: [Evento] -> Estadistica -> IO ()
-guardarCSV eventos e = do
+guardarCSV eventos estadistica = do
 
-    let cats = contarPorCategoria eventos
+    let resumen = contarEventosPorCategoria eventos
 
-        linea =
-            show (estId e) ++ "," ++
-            show (fechaConsulta e) ++ "," ++
-            show (extraerCategoria "Apartado" cats) ++ "," ++
-            show (extraerCategoria "Compra" cats) ++ "," ++
-            show (extraerCategoria "Devolucion" cats) ++ "," ++
-            show (extraerCategoria "Seguimiento" cats) ++ "," ++
-            show (extraerCategoria "Visualizacion" cats) ++ "," ++
+        lineaCSV =
+            show (estId estadistica) ++ "," ++
+            show (fechaConsulta estadistica) ++ "," ++
+            show (buscarCategoria "Apartado" resumen) ++ "," ++
+            show (buscarCategoria "Compra" resumen) ++ "," ++
+            show (buscarCategoria "Devolucion" resumen) ++ "," ++
+            show (buscarCategoria "Seguimiento" resumen) ++ "," ++
+            show (buscarCategoria "Visualizacion" resumen) ++ "," ++
             eventoMaxCSV eventos ++ "," ++
-            eventoMinCSV eventos ++ "," ++
-            quitarGuiones (calcularDiaMasActivo eventos)
+            eMinimoSinDev eventos ++ "," ++
+            show (diaConMasActividad eventos)
 
-    appendFile "data/estadisticas.csv" (linea ++ "\n")
-
-quitarGuiones :: String -> String
-quitarGuiones = filter (/= '-')
+    appendFile "data/estadisticas.csv" (lineaCSV ++ "\n")
 
 
-
-mostrarEstadistica :: [Evento] -> Estadistica -> IO ()
-mostrarEstadistica eventos e = do
-
-    putStrLn (titulo "\n╔════════════════════════════════════╗")
-    putStrLn (titulo "           ESTADÍSTICAS            ")
-    putStrLn (titulo "╚════════════════════════════════════╝")
-
-    putStrLn (okMsg ("ID: " ++ show (estId e)))
-    putStrLn (infoMsg ("Fecha consulta: " ++ formatearFecha (fechaConsulta e)))
-
-    putStrLn (subtitulo "\nResumen de categorías:")
-    putStrLn (texto (eventosPorCategoria e))
-
-    let maxE = eventoMaxCSV eventos
-        minE = eventoMinCSV eventos
-        dia  = calcularDiaMasActivo eventos
-
-    putStrLn (amarillo ++ "\n┌── MÁXIMO ──────────────────────────────" ++ reset)
-    putStrLn ("│ ID: " ++ formatearLinea maxE)
-    putStrLn (amarillo ++ "└───────────────────────────────────────" ++ reset)
-
-    putStrLn (rojo ++ "\n┌── MÍNIMO ──────────────────────────────" ++ reset)
-    putStrLn ("│ ID: " ++ formatearLinea minE)
-    putStrLn (rojo ++ "└───────────────────────────────────────" ++ reset)
-
-    putStrLn (magenta ++ "\n┌── DÍA MÁS ACTIVO ──────────────────────" ++ reset)
-    putStrLn ("│ " ++ safeFecha dia)
-    putStrLn (magenta ++ "└───────────────────────────────────────" ++ reset)
-
-    putStrLn (titulo "╚════════════════════════════════════╝")
-
-
-
-formatearLinea :: String -> String
-formatearLinea s =
-    case break (== ',') s of
-        (idv, _:resto) ->
-            case readMaybe resto :: Maybe Float of
-                Just n ->
-                    "ID: " ++ idv ++ "  |  Monto: " ++ formatearMonto n
-                Nothing ->
-                    "ID: " ++ idv ++ "  |  Monto: 0.00"
-        _ -> s
-
-safeFecha :: String -> String
-safeFecha s =
-    let clean = quitarGuiones s
-    in if length clean == 8
-        then take 4 clean ++ "-" ++ take 2 (drop 4 clean) ++ "-" ++ drop 6 clean
-        else clean
+--------------------------------------------------------------------------------
+-- Nombre: diaConMasActividad
+-- Entrada: lista de eventos
+-- Salida: día (timestamp) con más actividad registrada
+-- Restricciones: lista no vacía para resultado válido
+--------------------------------------------------------------------------------
+diaConMasActividad :: [Evento] -> Int
+diaConMasActividad [] = 0
+diaConMasActividad eventos =
+    let 
+        fechasOrdenadas = sort (map timestamp eventos)
+        gruposFechas = group fechasOrdenadas
+        conteoDias = map (\g -> (head g, length g)) gruposFechas
+        (dia, _) = maximumBy (compare `on` snd) conteoDias
+    in 
+        dia
