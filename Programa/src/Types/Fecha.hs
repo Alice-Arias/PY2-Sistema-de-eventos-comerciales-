@@ -15,7 +15,7 @@ import Data.Function
 -- Restricciones: la fecha debe estar en formato válido
 --------------------------------------------------------------------------------
 extraerAnio :: Int -> Integer
-extraerAnio fecha = fromIntegral (fecha `div` 10000)
+extraerAnio fechaCompleta = fromIntegral (fechaCompleta `div` 10000)
 
 --------------------------------------------------------------------------------
 -- extraerMesDeFecha
@@ -24,7 +24,7 @@ extraerAnio fecha = fromIntegral (fecha `div` 10000)
 -- Restricciones: la fecha debe estar en formato válido
 --------------------------------------------------------------------------------
 extraerMes :: Int -> Int
-extraerMes fecha = (fecha `div` 100) `mod` 100
+extraerMes fechaCompleta = (fechaCompleta `div` 100) `mod` 100
 
 --------------------------------------------------------------------------------
 --  extraerDiaDeFecha
@@ -33,8 +33,7 @@ extraerMes fecha = (fecha `div` 100) `mod` 100
 -- Restricciones: la fecha debe estar en formato válido
 --------------------------------------------------------------------------------
 extraerDia :: Int -> Int
-extraerDia fecha = fecha `mod` 100
-
+extraerDia fechaCompleta = fechaCompleta `mod` 100
 --------------------------------------------------------------------------------
 --  convertirNumeroAFecha
 -- Entrada: número de fecha en formato YYYYMMDD
@@ -57,9 +56,9 @@ intToDay fecha =
 -- Restricciones: ninguna
 --------------------------------------------------------------------------------
 obtenerAnio :: Day -> Integer
-obtenerAnio fecha =
-    let (y, _, _) = toGregorian fecha--toGregorian devuelve (año, mes, día)
-    in y
+obtenerAnio fechaCompleta =
+    let (anio, _, _) = toGregorian fechaCompleta  -- toGregorian devuelve (año, mes, día)
+    in anio
 
 --------------------------------------------------------------------------------
 -- obtenerMesDeFecha
@@ -68,9 +67,9 @@ obtenerAnio fecha =
 -- Restricciones: ninguna
 --------------------------------------------------------------------------------
 obtenerMes :: Day -> Int
-obtenerMes fecha =
-    let (_, m, _) = toGregorian fecha
-    in m
+obtenerMes fechaCompleta =
+    let (_, mes, _) = toGregorian fechaCompleta
+    in mes
 
 --------------------------------------------------------------------------------
 --  convertirMesYAnioATexto
@@ -88,9 +87,9 @@ extraerMesAno = formatearMesAno
 -- Restricciones: ninguna
 --------------------------------------------------------------------------------
 obtenerDia :: Day -> Int
-obtenerDia fecha =
-    let (_, _, d) = toGregorian fecha
-    in d
+obtenerDia fechaCompleta =
+    let (_, _, dia) = toGregorian fechaCompleta
+    in dia
 
 --------------------------------------------------------------------------------
 -- convertirFechaAEntero
@@ -99,9 +98,8 @@ obtenerDia fecha =
 -- Restricciones: valores deben ser válidos
 --------------------------------------------------------------------------------
 formatearComoInt :: Integer -> Int -> Int -> Int
-formatearComoInt anio mes dia =
-    read (printf "%04d%02d%02d" anio mes dia)
-
+formatearComoInt anioValor mesValor diaValor =
+    read (printf "%04d%02d%02d" anioValor mesValor diaValor)
 --------------------------------------------------------------------------------
 --  convertirFechaSistemaAEntero
 -- Entrada: fecha tipo Day
@@ -164,7 +162,6 @@ formatearMesAno fecha =
         anio = fecha `div` 10000
     in
         nombreMes mes ++ " " ++ show anio
-
 --------------------------------------------------------------------------------
 -- validarFechaTexto
 -- Entrada: texto con formato dd-mm-yyyy
@@ -172,11 +169,11 @@ formatearMesAno fecha =
 -- Restricciones: debe cumplir formato correcto y valores válidos
 --------------------------------------------------------------------------------
 parseFecha :: String -> Maybe Int
-parseFecha input =
-    case split '-' input of
-        [dd, mm, yyyy]
-            | esFechaValida dd mm yyyy ->
-                Just (toInt yyyy * 10000 + toInt mm * 100 + toInt dd)
+parseFecha textoFecha =
+    case split '-' textoFecha of
+        [diaTexto, mesTexto, anioTexto]
+            | esFechaValida diaTexto mesTexto anioTexto ->
+                Just (toInt anioTexto * 10000 + toInt mesTexto * 100 + toInt diaTexto)
         _ -> Nothing
 
 --------------------------------------------------------------------------------
@@ -213,8 +210,8 @@ soloDigitos = all isDigit
 -- Restricciones: min debe ser menor o igual a max
 --------------------------------------------------------------------------------
 dentroRango :: Int -> Int -> Int -> Bool
-dentroRango x min max = x >= min && x <= max
-
+dentroRango valorActual valorMinimo valorMaximo =
+    valorActual >= valorMinimo && valorActual <= valorMaximo
 --------------------------------------------------------------------------------
 --  convertirTextoANumero
 -- Entrada: texto numérico
@@ -258,8 +255,9 @@ filtrarEventosEnRango listaEventos fechaInicio fechaFin = filter (\evento -> tim
 -- Restricciones: ninguna
 --------------------------------------------------------------------------------
 ordenarEventosPorFecha :: [Evento] -> [Evento]
-ordenarEventosPorFecha = sortBy (\eventoA eventoB -> compare (timestamp eventoA) (timestamp eventoB))
-
+ordenarEventosPorFecha = sortBy (\eventoIzquierdo eventoDerecho ->
+        compare (timestamp eventoIzquierdo) (timestamp eventoDerecho)
+    )
 --------------------------------------------------------------------------------
 -- Nombre: ordenarFechas
 -- Entrada: dos fechas enteras

@@ -14,8 +14,8 @@ import Types.Modelos
 --   - Agrega prefijo CRC
 --------------------------------------------------------------------------------
 formatearMonto :: Float -> String
-formatearMonto n =
-    "CRC " ++ formatearConComas (showFFloat (Just 2) n "")
+formatearMonto monto =
+    "CRC " ++ formatearConComas (showFFloat (Just 2) monto "")
 
 --------------------------------------------------------------------------------
 -- Nombre: formatearConComas
@@ -27,10 +27,12 @@ formatearMonto n =
 --   - Solo formateo de texto
 --------------------------------------------------------------------------------
 formatearConComas :: String -> String
-formatearConComas str =
-    let (entero, decimal) = span (/='.') str
-        grupos = agrupar3 (reverse entero)
-    in reverse (intercalate "," grupos) ++ decimal
+formatearConComas numeroTexto =
+    let
+        (parteEntera, parteDecimal) = span (/='.') numeroTexto
+        gruposDigitos = agrupar3 (reverse parteEntera)
+    in
+        reverse (intercalate "," gruposDigitos) ++ parteDecimal
 
 --------------------------------------------------------------------------------
 -- Nombre: agrupar3
@@ -42,9 +44,10 @@ formatearConComas str =
 --   - Agrupa de 3 en 3
 --------------------------------------------------------------------------------
 agrupar3 :: String -> [String]
-agrupar3 [] = []
-agrupar3 xs = take 3 xs : agrupar3 (drop 3 xs)
-
+agrupar3 texto =
+    case texto of
+        [] -> []
+        _  -> take 3 texto : agrupar3 (drop 3 texto)
 --------------------------------------------------------------------------------
 -- FORMATO VISUAL
 --------------------------------------------------------------------------------
@@ -60,7 +63,7 @@ agrupar3 xs = take 3 xs : agrupar3 (drop 3 xs)
 --   - Rellena con espacios si es necesario
 --------------------------------------------------------------------------------
 ajustarTexto :: String -> Int -> String
-ajustarTexto txt n = take n (txt ++ repeat ' ')
+ajustarTexto texto longitud = take longitud (texto ++ repeat ' ')
 
 --------------------------------------------------------------------------------
 -- Nombre: ajustarNumero
@@ -73,9 +76,9 @@ ajustarTexto txt n = take n (txt ++ repeat ' ')
 --   - Completa con espacios a la izquierda
 --------------------------------------------------------------------------------
 ajustarNumero :: Int -> Int -> String
-ajustarNumero n ancho =
-    let txt = show n
-    in replicate (ancho - length txt) ' ' ++ txt
+ajustarNumero numero anchoTotal =
+    let textoNumero = show numero
+    in replicate (anchoTotal - length textoNumero) ' ' ++ textoNumero
 
 --------------------------------------------------------------------------------
 -- Nombre: alinearTexto
@@ -88,8 +91,8 @@ ajustarNumero n ancho =
 --   - Completa con espacios a la derecha
 --------------------------------------------------------------------------------
 alinearTexto :: String -> Int -> String
-alinearTexto txt n =
-    txt ++ replicate (n - length txt) ' '
+alinearTexto texto ancho = texto ++ replicate (ancho - length texto) ' '
+
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerPromedio
@@ -102,9 +105,9 @@ alinearTexto txt n =
 --   - Devuelve 0 si no existe
 --------------------------------------------------------------------------------
 obtenerPromedio :: Categoria -> [(Categoria, Float)] -> Float
-obtenerPromedio cat lista =
-    case lookup cat lista of
-        Just p  -> p
+obtenerPromedio categoriaBuscada listaPromedios =
+    case lookup categoriaBuscada listaPromedios of
+        Just promedio -> promedio
         Nothing -> 0
 
 --------------------------------------------------------------------------------
@@ -118,4 +121,4 @@ obtenerPromedio cat lista =
 --   - Solo formateo visual
 --------------------------------------------------------------------------------
 col :: String -> Int -> String
-col txt n = take n (txt ++ repeat ' ')
+col texto ancho = take ancho (texto ++ repeat ' ')

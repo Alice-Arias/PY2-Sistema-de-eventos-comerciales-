@@ -22,17 +22,17 @@ montoTotal :: [Evento] -> IO ()
 montoTotal eventos = do
 
     let
-        eventosDevoluciones = filter (\e -> categoria e == Devolucion) eventos
+        eventosDevolucion = filter (\evento -> categoria evento == Devolucion) eventos
 
-        eventosCompras = filter (\e -> categoria e == Compra) eventos
+        eventosCompra = filter (\evento -> categoria evento == Compra) eventos
 
         dineroTotalSistema = sum (map total eventos)
 
-        dineroPerdidoDevoluciones = sum (map total eventosDevoluciones)
+        dineroPerdidoDevoluciones = sum (map total eventosDevolucion)
 
-        dineroFinalCorregido = dineroTotalSistema - dineroPerdidoDevoluciones
+        dineroFinalSistema = dineroTotalSistema - dineroPerdidoDevoluciones
 
-        comprasSinImpuesto = filter (\e -> impuesto e == 0) eventosCompras
+        comprasSinImpuesto = filter (\evento -> impuesto evento == 0) eventosCompra
 
         cantidadComprasSinImpuesto = length comprasSinImpuesto
 
@@ -72,10 +72,9 @@ montoTotal eventos = do
     putStrLn (subtitulo " TOTAL FINAL DEL SISTEMA ")
     putStrLn (titulo "========================================")
 
-    putStrLn (okMsg ("  " ++ formatearMonto dineroFinalCorregido))
+    putStrLn (okMsg ("  " ++ formatearMonto dineroFinalSistema))
 
     putStrLn (titulo "========================================")
-
 
 --------------------------------------------------------------------------------
 -- Nombre: calcularTotalCorrecto

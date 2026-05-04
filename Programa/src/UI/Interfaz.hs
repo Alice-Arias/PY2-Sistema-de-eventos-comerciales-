@@ -47,6 +47,7 @@ import Core.Promedios
 import Utils.Calculos
 
 import Text.Read (readMaybe)
+import Utils.Colores (titulo)
 
 --------------------------------------------------------------------------------
 -- MENÚ PRINCIPAL
@@ -216,23 +217,23 @@ imprimirResumenUI grupos = do
 -- Restricciones: lista no vacía opcional
 --------------------------------------------------------------------------------
 imprimirGrupo :: (Day, Day, [Evento]) -> IO ()
-imprimirGrupo (inicioDay, finDay, grupo) = do
+imprimirGrupo (fechaInicio, fechaFin, eventosGrupo) = do
     let 
-        inicio = formatearFecha (dayToInt inicioDay)
+        fechaInicioTexto = formatearFecha (dayToInt fechaInicio)
 
-        fin    = formatearFecha (dayToInt finDay)
+        fechaFinTexto    = formatearFecha (dayToInt fechaFin)
 
-        rango  = inicio ++ " - " ++ fin
+        rangoFechas      = fechaInicioTexto ++ " - " ++ fechaFinTexto
 
-        cantidad = length grupo
+        cantidadEventos  = length eventosGrupo
 
-        montoTotal = sum (map total grupo)
+        montoTotalGrupo  = sum (map total eventosGrupo)
 
     imprimirLinea $
 
-        texto (ajustarTexto rango 40) ++ " | " ++
-        texto (ajustarNumero cantidad 8) ++ " | " ++
-        okMsg (ajustarTexto (formatearMonto montoTotal) 18)
+        texto (ajustarTexto rangoFechas 40) ++ " | " ++
+        texto (ajustarNumero cantidadEventos 8) ++ " | " ++
+        okMsg (ajustarTexto (formatearMonto montoTotalGrupo) 18)
 
 --------------------------------------------------------------------------------
 -- Nombre: pedirIntervaloDias
@@ -312,22 +313,22 @@ reporteEtiquetas :: [Evento] -> IO ()
 reporteEtiquetas eventos = do
 
     let 
-        eventosEtiqueta = etiquetarAltoValor eventos
+        eventosConEtiqueta = etiquetarAltoValor eventos
 
-        categorias = nub (map categoria eventos)
+        categoriasUnicas = nub (map categoria eventos)
 
-        promedios = calcularPromedios eventos
+        promediosPorCategoria = calcularPromedios eventos
 
-        totalGeneral = length eventos
+        totalEventos = length eventos
 
-        totalSobrePromedio = length (filter etiqueta eventosEtiqueta)
+        totalEventosSobrePromedio = length (filter etiqueta eventosConEtiqueta)
 
     putStrLn (titulo "\n════════════════════════════════════════")
     putStrLn (subtitulo "        REPORTE DE ETIQUETAS")
     putStrLn (titulo "════════════════════════════════════════")
 
-    putStrLn (texto ("Total eventos      : " ++ show totalGeneral))
-    putStrLn (okMsg ("Sobre promedio     : " ++ show totalSobrePromedio))
+    putStrLn (texto ("Total eventos      : " ++ show totalEventos))
+    putStrLn (okMsg ("Sobre promedio     : " ++ show totalEventosSobrePromedio))
     putStrLn ""
 
     putStrLn (colorBold magenta
@@ -338,17 +339,20 @@ reporteEtiquetas eventos = do
 
     putStrLn (separador (replicate 65 '-'))
 
-    mapM_ (\cat ->
-        let eventosCat = filter (\e -> categoria e == cat) eventosEtiqueta
-            cantidadTotal = length eventosCat
-            sobrePromedio = length (filter etiqueta eventosCat)
-            promedio = obtenerPromedio cat promedios
+    mapM_ (\categoriaActual ->
+        let eventosCategoria = filter (\evento -> categoria evento == categoriaActual) eventosConEtiqueta
+
+            cantidadCategoria = length eventosCategoria
+
+            cantidadSobrePromedio = length (filter etiqueta eventosCategoria)
+
+            promedioCategoria = obtenerPromedio categoriaActual promediosPorCategoria
 
         in putStrLn (texto (
-            ajustarTexto (show cat) 15 ++ " | "
-        ++ ajustarNumero cantidadTotal 7 ++ " | "
-        ++ ajustarTexto (formatearMonto promedio) 18 ++ " | "
-        ++ ajustarNumero sobrePromedio 6)) ) categorias
+            ajustarTexto (show categoriaActual) 15 ++ " | "
+        ++ ajustarNumero cantidadCategoria 7 ++ " | "
+        ++ ajustarTexto (formatearMonto promedioCategoria) 18 ++ " | "
+        ++ ajustarNumero cantidadSobrePromedio 6)) ) categoriasUnicas
 
     putStrLn (titulo "════════════════════════════════════════")
 
@@ -363,22 +367,21 @@ reporteCompleto :: [Evento] -> IO ()
 reporteCompleto eventos = do
 
     let 
-        eventosFinales = actualizarTotales eventos
+        eventosConTotales = actualizarTotales eventos
 
-        totalImp = length (filter (\e -> categoria e == Compra && impuesto e > 0) eventosFinales)
-        
-        totalEti = length (filter etiqueta eventosFinales)
+        cantidadComprasConImpuesto = length (filter (\evento -> categoria evento == Compra && impuesto evento > 0) eventosConTotales)
+
+        cantidadEventosConEtiqueta =  length (filter etiqueta eventosConTotales)
 
     putStrLn (titulo "\n══════════════════════════════════════")
     putStrLn (subtitulo "        REPORTE COMPLETO")
     putStrLn (titulo "══════════════════════════════════════")
 
-    putStrLn (texto ("Eventos         : " ++ show (length eventosFinales)))
-    putStrLn (okMsg ("Impuestos       : " ++ show totalImp))
-    putStrLn (okMsg ("Sobre promedio  : " ++ show totalEti))
+    putStrLn (texto ("Eventos         : " ++ show (length eventosConTotales)))
+    putStrLn (okMsg ("Impuestos       : " ++ show cantidadComprasConImpuesto))
+    putStrLn (okMsg ("Sobre promedio  : " ++ show cantidadEventosConEtiqueta))
 
     putStrLn (titulo "══════════════════════════════════════")
-
 
 --------------------------------------------------------------------------------
 -- MENSAJES DEL SISTEMA
@@ -440,34 +443,32 @@ mostrarResumenActualizacion cantidadEventosAgregados = do
 --   - Requiere lista de eventos válida
 --------------------------------------------------------------------------------
 mostrarEstadistica :: [Evento] -> Estadistica -> IO ()
-mostrarEstadistica eventos e = do
+mostrarEstadistica listaEventos estadistica = do
 
     putStrLn (titulo "\n╔════════════════════════════════════╗")
     putStrLn (titulo "           ESTADÍSTICAS            ")
     putStrLn (titulo "╚════════════════════════════════════╝")
 
-    putStrLn (okMsg ("ID: " ++ show (estId e)))
-    putStrLn (infoMsg ("Fecha consulta: " ++ formatearFecha (fechaConsulta e)))
+    putStrLn (okMsg ("ID: " ++ show (estId estadistica)))
+    putStrLn (infoMsg ("Fecha consulta: " ++ formatearFecha (fechaConsulta estadistica)))
 
     putStrLn (subtitulo "\nResumen de categorías:")
-    putStrLn (texto (eventosPorCategoria e))
+    putStrLn (texto (eventosPorCategoria estadistica))
 
-    let maxE = eventoMaxCSV eventos
-
-        minE = eMinimoSinDev eventos
-
-        dia  = calcularDiaMasActivo eventos
+    let maximoEvento = eventoMaxCSV listaEventos
+        minimoEvento = eMinimoSinDev listaEventos
+        diaMasActivo = calcularDiaMasActivo listaEventos
 
     putStrLn (amarillo ++ "\n── MÁXIMO ──────────────────────────────" ++ reset)
-    putStrLn ("│ ID: " ++ formatearLinea maxE)
+    putStrLn ("│ ID: " ++ formatearLinea maximoEvento)
     putStrLn (amarillo ++ "───────────────────────────────────────" ++ reset)
 
     putStrLn (rojo ++ "\n── MÍNIMO ──────────────────────────────" ++ reset)
-    putStrLn ("│ ID: " ++ formatearLinea minE)
+    putStrLn ("│ ID: " ++ formatearLinea minimoEvento)
     putStrLn (rojo ++ "───────────────────────────────────────" ++ reset)
 
     putStrLn (magenta ++ "\n── DÍA MÁS ACTIVO ──────────────────────" ++ reset)
-    putStrLn ("│ " ++ safeFecha dia)
+    putStrLn ("│ " ++ safeFecha diaMasActivo)
     putStrLn (magenta ++ "───────────────────────────────────────" ++ reset)
 
     putStrLn (titulo "╚════════════════════════════════════╝")
@@ -480,15 +481,15 @@ mostrarEstadistica eventos e = do
 --   - El formato esperado es "id,monto"
 --------------------------------------------------------------------------------
 formatearLinea :: String -> String
-formatearLinea s =
-    case break (== ',') s of
-        (idv, _:resto) ->
-            case readMaybe resto :: Maybe Float of
-                Just n ->
-                    " " ++ idv ++ "  |  Monto: " ++ formatearMonto n
-                Nothing ->
-                    " " ++ idv ++ "  |  Monto: 0.00"
-        _ -> s
+formatearLinea lineaCSV =
+    case break (== ',') lineaCSV of
+        (idEventoTexto, _:restoTexto) ->
+
+            case readMaybe restoTexto :: Maybe Float of
+
+                Just monto ->  " " ++ idEventoTexto ++ "  |  Monto: " ++ formatearMonto monto
+                Nothing -> " " ++ idEventoTexto ++ "  |  Monto: 0.00"
+        _ -> lineaCSV
 
 --------------------------------------------------------------------------------
 -- Nombre: safeFecha
@@ -498,12 +499,13 @@ formatearLinea s =
 --   - Si el formato es inválido, devuelve el texto original
 --------------------------------------------------------------------------------
 safeFecha :: String -> String
-safeFecha s =
-    let clean = quitarGuiones s
-    in if length clean == 8
-        then take 4 clean ++ "-" ++ take 2 (drop 4 clean) ++ "-" ++ drop 6 clean
-        else clean
-
+safeFecha textoFecha =
+    let 
+        fechaSinGuiones = quitarGuiones textoFecha
+    in 
+        if length fechaSinGuiones == 8
+        then take 4 fechaSinGuiones ++ "-" ++ take 2 (drop 4 fechaSinGuiones) ++ "-" ++ drop 6 fechaSinGuiones
+        else fechaSinGuiones
 --------------------------------------------------------------------------------
 -- Nombre: imprimirEncabezado
 -- Entrada: fecha inicio y fecha fin
@@ -557,17 +559,21 @@ imprimirFila evento = do
     let subtotalEvento = calcularSubtotal (valor evento) (cantidad evento)
         totalVisual = formatearTotal evento subtotalEvento
 
+        categoriaColor =
+            case categoria evento of
+                Devolucion -> warningMsg
+                Compra     -> okMsg
+                _          -> titulo
+
     putStrLn (
-        texto      (col (formatearFecha (timestamp evento)) 12) ++ "|" ++
-        infoMsg    (col (show (idEvento evento)) 8) ++ "|" ++
-        titulo     (col (show (categoria evento)) 14) ++ "|" ++
-        texto      (col (formatearMonto (valor evento)) 14) ++ "|" ++
-        warningMsg (col (show (cantidad evento)) 6) ++ "|" ++
+        texto        (col (formatearFecha (timestamp evento)) 12) ++ "|" ++
+        infoMsg      (col (show (idEvento evento)) 8) ++ "|" ++
+        categoriaColor (col (show (categoria evento)) 14) ++ "|" ++
+        texto        (col (formatearMonto (valor evento)) 14) ++ "|" ++
+        warningMsg   (col (show (cantidad evento)) 6) ++ "|" ++
         totalVisual)
 
     putStrLn (separador "--------------------------------------------------------------------")
-
-
 --------------------------------------------------------------------------------
 -- Nombre: imprimirResumen
 -- Entrada: lista de eventos
@@ -578,10 +584,25 @@ imprimirFila evento = do
 imprimirResumen :: [Evento] -> IO ()
 imprimirResumen eventos = do
 
+    let eventosActualizados = actualizarTotales eventos
+
+        totalesPorCategoria = construirTotalesPorCategoria eventosActualizados
+
+        montoFinal = sum (map totalAjustado eventosActualizados)
+
     putStrLn (separador "════════════════════════════════════════════════════════════════════")
 
     putStrLn (okMsg (" Total encontrados: " ++ show (length eventos)))
-    putStrLn (titulo (" Monto total: " ++ formatearMonto (sum (map total eventos))))
+
+    putStrLn ""
+
+    mapM_ (\(categoria, total) ->
+        putStrLn (titulo (show categoria ++ " : " ++ formatearMonto total))
+        ) totalesPorCategoria
+
+    putStrLn ""
+
+    putStrLn (okMsg (" Monto final de ganancias : " ++ formatearMonto montoFinal))
 
     putStrLn (separador "════════════════════════════════════════════════════════════════════")
 

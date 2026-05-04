@@ -84,9 +84,9 @@ construirResumenDelMes mes eventos =
 --   - Cada mes se analiza una sola vez
 --------------------------------------------------------------------------------
 construirResumenMensual :: [String] -> [Evento] -> [(String, Float)]
-construirResumenMensual meses eventos = map (\mes -> construirResumenDelMes mes eventos) meses
-
-
+construirResumenMensual listaMeses eventosSistema =
+    map (\mesActual -> construirResumenDelMes mesActual eventosSistema) listaMeses
+    
 --------------------------------------------------------------------------------
 -- Nombre: mesConMayorMonto
 -- Entrada: lista de eventos del sistema

@@ -11,8 +11,7 @@ module Utils.Listas where
 --   - Usa filtrado para contar coincidencias
 --------------------------------------------------------------------------------
 contarElemento :: Eq a => a -> [a] -> Int
-contarElemento elemento lista =
-    length (filtrarElemento elemento lista)
+contarElemento valorBuscado lista =  length (filtrarElemento valorBuscado lista)
 
 --------------------------------------------------------------------------------
 -- Nombre: filtrarElemento
@@ -25,8 +24,7 @@ contarElemento elemento lista =
 --   - Filtra usando igualdad exacta
 --------------------------------------------------------------------------------
 filtrarElemento :: Eq a => a -> [a] -> [a]
-filtrarElemento elemento =
-    filter (== elemento)
+filtrarElemento elemento = filter (== elemento)
 
 --------------------------------------------------------------------------------
 -- Nombre: maximoPorCriterio
@@ -54,7 +52,7 @@ maximoPorCriterio criterio = foldl1 (compararPorCriterio criterio)
 --   - Compara usando valores derivados del criterio
 --------------------------------------------------------------------------------
 compararPorCriterio :: Ord b => (a -> b) -> a -> a -> a
-compararPorCriterio criterio a b =
-    if criterio a > criterio b
-        then a
-        else b
+compararPorCriterio criterio valorA valorB =
+    if criterio valorA > criterio valorB
+        then valorA
+        else valorB

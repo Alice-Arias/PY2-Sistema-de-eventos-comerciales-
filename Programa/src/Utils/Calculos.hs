@@ -60,21 +60,21 @@ calcularTotales :: Evento -> Evento
 calcularTotales evento =
 
     let 
-        precioUnitario = valor evento
+        precioProducto = valor evento
 
-        cantidadUnidades = cantidad evento
+        cantidadProducto = cantidad evento
 
-        subtotal = redondear (calcularSubtotal precioUnitario cantidadUnidades)
+        subtotalCalculado = redondear (calcularSubtotal precioProducto cantidadProducto)
 
     in case categoria evento of
 
         Compra ->
 
-            let imp = redondear (calcularImpuesto13 subtotal)
-            in evento { impuesto = imp, total = subtotal + imp }
+            let impuestoCalculado = redondear (calcularImpuesto13 subtotalCalculado)
+            in evento { impuesto = impuestoCalculado, total = subtotalCalculado + impuestoCalculado }
 
         _ ->
-            evento { impuesto = 0, total = subtotal }
+            evento { impuesto = 0, total = subtotalCalculado }
 
 --------------------------------------------------------------------------------
 -- Nombre: actualizarTotales
@@ -111,11 +111,10 @@ porcentaje parte total = (parte / total) * 100
 --   - Si es devolución, se invierte el valor
 --------------------------------------------------------------------------------
 totalAjustado :: Evento -> Float
-totalAjustado e =
-    case categoria e of
-
-        Devolucion -> -(total e)
-        _          -> total e
+totalAjustado evento =
+    case categoria evento of
+        Devolucion -> -(total evento)
+        _          -> total evento
 
 --------------------------------------------------------------------------------
 -- Nombre: calcularSumaTotales
@@ -127,8 +126,7 @@ totalAjustado e =
 --   - Usa total ajustado
 --------------------------------------------------------------------------------
 calcularSumaTotales :: [Evento] -> Float
-
-calcularSumaTotales = sum . map totalAjustado
+calcularSumaTotales eventos = sum (map totalAjustado eventos)
 
 --------------------------------------------------------------------------------
 -- Nombre: contarEventos
@@ -216,7 +214,8 @@ sumarDias fecha dias = addDays (fromIntegral dias) fecha
 --   - Lista ordenada previamente
 --------------------------------------------------------------------------------
 separarEventos :: Day -> [Evento] -> ([Evento], [Evento])
-separarEventos fechaLimite = span (\e -> intToDay (timestamp e) < fechaLimite)
+separarEventos fechaLimite =
+    span (\evento -> intToDay (timestamp evento) < fechaLimite)
 
 --------------------------------------------------------------------------------
 -- Nombre: ajustarFinIntervalo
@@ -228,7 +227,8 @@ separarEventos fechaLimite = span (\e -> intToDay (timestamp e) < fechaLimite)
 --   - Resta un día
 --------------------------------------------------------------------------------
 ajustarFinIntervalo :: Day -> Day -> Day
-ajustarFinIntervalo fechaLimite =  min (addDays (-1) fechaLimite)
+ajustarFinIntervalo fechaLimite fechaComparacion =
+    min fechaComparacion (addDays (-1) fechaLimite)
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerPromedioCategoria
@@ -241,7 +241,7 @@ ajustarFinIntervalo fechaLimite =  min (addDays (-1) fechaLimite)
 --   - Usa lookup
 --------------------------------------------------------------------------------
 obtenerPromedioCategoria :: [(Categoria, Float)] -> Categoria -> Maybe Float
-obtenerPromedioCategoria promedios cat = lookup cat promedios
+obtenerPromedioCategoria listaPromedios categoriaBuscada = lookup categoriaBuscada listaPromedios
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerCategoriasUnicas
@@ -278,7 +278,7 @@ filtrarEventosPorCategoria listaEventos categoriaBuscada = filter (\evento -> ca
 --   - Usa valor bruto
 --------------------------------------------------------------------------------
 sumarValores :: [Evento] -> Float
-sumarValores = sum . map valor
+sumarValores eventos = sum (map valor eventos)
 
 --------------------------------------------------------------------------------
 -- Nombre: calcularPromedio
@@ -308,8 +308,8 @@ calcularPromedio suma cantidad = suma / fromIntegral cantidad
 --------------------------------------------------------------------------------
 eventoMaxCSV :: [Evento] -> String
 eventoMaxCSV eventos =
-    let e = maximumBy (compare `on` totalAjustado) eventos
-    in show (idEvento e) ++ "," ++ limpiarFloat (totalAjustado e)
+    let eventoMaximo = maximumBy (compare `on` totalAjustado) eventos
+    in show (idEvento eventoMaximo) ++ "," ++ limpiarFloat (totalAjustado eventoMaximo)
 
 
 --------------------------------------------------------------------------------
@@ -335,25 +335,24 @@ eventoMinCSV = eventoMinSinDevolucionesCSV
 --   - Recalcula subtotal e impuesto si es necesario
 --------------------------------------------------------------------------------
 totalReal :: Evento -> Float
-totalReal e =
-    let subtotal = valor e * fromIntegral (cantidad e)
+totalReal evento =
+    let subtotalCalculado = valor evento * fromIntegral (cantidad evento)
 
-        impuestoCalc =
-            if categoria e == Compra
-            then subtotal * 0.13
+        impuestoCalculado =
+            if categoria evento == Compra
+            then subtotalCalculado * 0.13
             else 0
 
-        totalCalculado = subtotal + impuestoCalc
+        totalConImpuesto = subtotalCalculado + impuestoCalculado
 
-        totalBase =
-            if total e == 0
-            then totalCalculado
-            else total e
+        totalBaseFinal =
+            if total evento == 0
+            then totalConImpuesto
+            else total evento
 
-    in case categoria e of
-        Devolucion -> -totalBase
-        _          -> totalBase
-
+    in case categoria evento of
+        Devolucion -> -totalBaseFinal
+        _          -> totalBaseFinal
 
 --------------------------------------------------------------------------------
 -- Nombre: limpiarFloat
@@ -379,12 +378,12 @@ limpiarFloat = show
 --------------------------------------------------------------------------------
 eventoMinSinDevolucionesCSV :: [Evento] -> String
 eventoMinSinDevolucionesCSV eventos =
-    let filtrados = filter (\e -> categoria e /= Devolucion) eventos
-    in if null filtrados
+    let eventosSinDevoluciones = filter (\evento -> categoria evento /= Devolucion) eventos
+    in if null eventosSinDevoluciones
         then "0,0"
         else
-            let e = minimumBy (compare `on` totalAjustado) filtrados
-            in show (idEvento e) ++ "," ++ limpiarFloat (totalAjustado e)
+            let eventoMinimo = minimumBy (compare `on` totalAjustado) eventosSinDevoluciones
+            in show (idEvento eventoMinimo) ++ "," ++ limpiarFloat (totalAjustado eventoMinimo)
 
 
 --------------------------------------------------------------------------------
@@ -397,8 +396,10 @@ eventoMinSinDevolucionesCSV eventos =
 --   - Agrupa eventos por fecha
 --------------------------------------------------------------------------------
 calcularDiaMasActivo :: [Evento] -> String
-calcularDiaMasActivo eventos =   fst (maximumBy (compare `on` snd) (contarDias eventos))
-
+calcularDiaMasActivo eventos =
+    let diasConConteo = contarDias eventos
+        diaMasActivo = maximumBy (compare `on` snd) diasConConteo
+    in fst diaMasActivo
 
 --------------------------------------------------------------------------------
 -- Nombre: contarDias
@@ -410,11 +411,13 @@ calcularDiaMasActivo eventos =   fst (maximumBy (compare `on` snd) (contarDias e
 --   - Agrupa eventos por fecha formateada
 --------------------------------------------------------------------------------
 contarDias :: [Evento] -> [(String, Int)]
-contarDias =
-    map (\xs -> (formatearFecha (timestamp (head xs)), length xs))
-    . groupBy ((==) `on` (formatearFecha . timestamp))
-    . sortBy (compare `on` (formatearFecha . timestamp))
+contarDias eventos =
 
+    let 
+        dias = map (formatearFecha . timestamp) eventos
+        diasUnicos = nub dias
+
+    in map (\dia -> (dia, length (filter (== dia) dias))) diasUnicos
 
 --------------------------------------------------------------------------------
 -- Nombre: quitarGuiones
@@ -456,8 +459,8 @@ formatearTotal evento subtotal =
 --   - Usa totalAjustado
 --------------------------------------------------------------------------------
 calcularMontoTotal :: [Evento] -> Float
-calcularMontoTotal = sum . map totalAjustado
-
+calcularMontoTotal eventos =
+    sum (map totalAjustado eventos)
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerAnios
@@ -469,8 +472,10 @@ calcularMontoTotal = sum . map totalAjustado
 --   - Sin duplicados
 --------------------------------------------------------------------------------
 obtenerAnios :: [Evento] -> [Integer]
-obtenerAnios eventos = sort (nub (map (extraerAnio . timestamp) eventos))
-
+obtenerAnios eventos =
+    let anios = map (extraerAnio . timestamp) eventos
+        aniosUnicos = nub anios
+    in sort aniosUnicos
 
 --------------------------------------------------------------------------------
 -- Nombre: obtenerCategorias
@@ -482,8 +487,9 @@ obtenerAnios eventos = sort (nub (map (extraerAnio . timestamp) eventos))
 --   - Sin duplicados
 --------------------------------------------------------------------------------
 obtenerCategorias :: [Evento] -> [Categoria]
-obtenerCategorias eventos =  nub (map categoria eventos)
-
+obtenerCategorias eventos =
+    let categorias = map categoria eventos
+    in nub categorias
 
 --------------------------------------------------------------------------------
 -- Nombre: promedioCategoriaAnioCalc
@@ -497,16 +503,17 @@ obtenerCategorias eventos =  nub (map categoria eventos)
 --   - Si no hay datos devuelve 0
 --------------------------------------------------------------------------------
 promedioCategoriaAnioCalc :: [Evento] -> Integer -> Categoria -> Float
-promedioCategoriaAnioCalc eventos anio cat =
-    let filtrados = filter (\e ->  categoria e == cat &&   extraerAnio (timestamp e) == anio  ) eventos
+promedioCategoriaAnioCalc eventos anio categoriaBuscada =
+    let
+        eventosFiltrados = filter (\evento ->   categoria evento == categoriaBuscada &&  extraerAnio (timestamp evento) == anio ) eventos
 
-        suma = sum (map totalAjustado filtrados)
-        cantidad = length filtrados
+        sumaTotales = sum (map totalAjustado eventosFiltrados)
+        cantidadEventos = length eventosFiltrados
 
-    in if cantidad == 0
-        then 0
-        else suma / fromIntegral cantidad
-
+    in
+        if cantidadEventos == 0
+            then 0
+            else sumaTotales / fromIntegral cantidadEventos
 
 --------------------------------------------------------------------------------
 -- Nombre: eMinimoSinDev
@@ -537,10 +544,10 @@ eMinimoSinDev eventos =
 --   - No permite devoluciones ni valores negativos
 --------------------------------------------------------------------------------
 esValido :: Evento -> Bool
-esValido e =
-    categoria e /= Devolucion &&
-    valor e > 0 &&
-    cantidad e > 0
+esValido evento =
+    categoria evento /= Devolucion &&
+    valor evento > 0 &&
+    cantidad evento > 0
 
 
 --------------------------------------------------------------------------------
@@ -553,8 +560,15 @@ esValido e =
 --   - Aplica impuesto solo a compras
 --------------------------------------------------------------------------------
 totalSinDevoluciones :: Evento -> Float
-totalSinDevoluciones e =
-    let subtotal = valor e * fromIntegral (cantidad e)
-    in case categoria e of
-        Compra -> subtotal * 1.13
-        _      -> subtotal
+totalSinDevoluciones evento =
+    let subtotalCalculado = valor evento * fromIntegral (cantidad evento)
+    in case categoria evento of
+        Compra -> subtotalCalculado * 1.13
+        _      -> subtotalCalculado
+
+construirTotalesPorCategoria :: [Evento] -> [(Categoria, Float)]
+construirTotalesPorCategoria eventos =
+    let categoriasUnicas = nub (map categoria eventos)
+    in map (\cat ->
+        (cat, sum (map totalAjustado (filter (\e -> categoria e == cat) eventos)))
+        ) categoriasUnicas

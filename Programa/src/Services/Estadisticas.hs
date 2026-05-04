@@ -2,8 +2,8 @@ module Services.Estadisticas where
 
 import Types.Modelos
 import Types.Fecha
-import Data.List 
-import Data.Function 
+import Data.List
+import Data.Function
 import UI.Interfaz
 import Utils.Colores
 import Utils.Calculos
@@ -21,7 +21,7 @@ import Utils.Formato
 generarEstadisticas :: [Evento] -> IO Estadistica
 generarEstadisticas eventos = do
 
-    let 
+    let
         estadisticaFinal = construirEstadistica eventos
 
     guardarCSV eventos estadisticaFinal
@@ -41,9 +41,9 @@ generarEstadisticas eventos = do
 --------------------------------------------------------------------------------
 construirEstadistica :: [Evento] -> Estadistica
 construirEstadistica eventos =
-    let 
+    let
         idEstadistica = generarId eventos
-    in 
+    in
         Estadistica
         idEstadistica
         obtenerFechaActual
@@ -79,12 +79,12 @@ obtenerFechaActual = 20260416
 -- Restricciones: los eventos deben tener categoría válida
 --------------------------------------------------------------------------------
 contarEventosPorCategoria :: [Evento] -> [(String, Int)]
-contarEventosPorCategoria =
-    map (\grupo -> (show (categoria (head grupo)), length grupo))
+contarEventosPorCategoria = map (\grupoEventos ->
+            (show (categoria (head grupoEventos)), length grupoEventos)
+        )
     . groupBy ((==) `on` (show . categoria))
     . sortBy (compare `on` (show . categoria))
-
-
+    
 --------------------------------------------------------------------------------
 -- Nombre: buscarCategoria
 -- Entrada:
@@ -103,9 +103,9 @@ buscarCategoria categoriaBuscada lista = maybe 0 id (lookup categoriaBuscada lis
 --------------------------------------------------------------------------------
 resumenCategorias :: [Evento] -> String
 resumenCategorias eventos =
-    let 
+    let
         resumen = contarEventosPorCategoria eventos
-    in 
+    in
         unlines
         [ "Apartado:      " ++ show (buscarCategoria "Apartado" resumen)
         , "Compra:        " ++ show (buscarCategoria "Compra" resumen)
@@ -149,10 +149,10 @@ guardarCSV eventos estadistica = do
 diaConMasActividad :: [Evento] -> Int
 diaConMasActividad [] = 0
 diaConMasActividad eventos =
-    let 
+    let
         fechasOrdenadas = sort (map timestamp eventos)
         gruposFechas = group fechasOrdenadas
         conteoDias = map (\g -> (head g, length g)) gruposFechas
         (dia, _) = maximumBy (compare `on` snd) conteoDias
-    in 
+    in
         dia

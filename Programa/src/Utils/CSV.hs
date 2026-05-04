@@ -59,7 +59,7 @@ eventoToCSV evento =
 --   - Compara por idEvento
 --------------------------------------------------------------------------------
 existeEvento :: Int -> [Evento] -> Bool
-existeEvento idBuscado = any (\evento -> idEvento evento == idBuscado)
+existeEvento idBuscado = any (\eventoActual -> idEvento eventoActual == idBuscado)
 
 --------------------------------------------------------------------------------
 -- Nombre: agregarEventoSeguro
@@ -108,14 +108,16 @@ split :: Char -> String -> [String]
 split _ [] = []
 
 split separador texto =
-    let (parteAntes, restoTexto) = break (== separador) texto
+    let
+        (parteAntesSeparador, restoDelTexto) = break (== separador) texto
 
         listaRestante =
-            if null restoTexto
+            if null restoDelTexto
             then []
-            else split separador (tail restoTexto)
+            else split separador (tail restoDelTexto)
 
-    in parteAntes : listaRestante
+    in
+        parteAntesSeparador : listaRestante
 
 --------------------------------------------------------------------------------
 -- Nombre: csvToEventoSeguro
