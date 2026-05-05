@@ -25,13 +25,13 @@ promedioCategoriaPorAnio eventos = do
 
         categoriasDisponibles = obtenerCategorias eventos
 
-    putStrLn (titulo "\n================================")
-    putStrLn (titulo " PROMEDIO POR CATEGORÍA POR AÑO")
-    putStrLn (titulo "================================")
+    putStrLn (titulo "\n════════════════════════════════════════")
+    putStrLn (magenta2 "    PROMEDIO POR CATEGORÍA POR AÑO")
+    putStrLn (titulo "════════════════════════════════════════")
 
     mapM_ (mostrarPromediosPorAnio categoriasDisponibles eventos) aniosDisponibles
 
-    putStrLn (titulo "================================")
+    putStrLn (titulo "════════════════════════════════════════")
 
 
 --------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ promedioCategoriaPorAnio eventos = do
 mostrarPromediosPorAnio :: [Categoria] -> [Evento] -> Integer -> IO ()
 mostrarPromediosPorAnio categoriasDisponibles eventos anio = do
 
-    putStrLn (titulo ("\nAÑO: " ++ show anio))
+    putStrLn (opcion ("\nAÑO: " ++ show anio))
     putStrLn (separador "--------------------------------------------")
     putStrLn (subtitulo "CATEGORÍA        | PROMEDIO")
     putStrLn (separador "--------------------------------------------")

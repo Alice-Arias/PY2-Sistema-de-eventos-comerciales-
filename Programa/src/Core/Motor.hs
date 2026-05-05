@@ -12,6 +12,7 @@ import Types.Fecha
 import UI.Interfaz
 import Utils.CSV
 import Utils.Colores
+import Utils.Colores (subtitulo)
 
 --------------------------------------------------------------------------------
 -- Nombre: cicloMenu
@@ -135,14 +136,14 @@ opcionBusquedaRango :: FilePath -> [Evento] -> IO ()
 opcionBusquedaRango rutaArchivo eventos = do
     eventosActualizados <- actualizarSistema rutaArchivo eventos
 
-    putStrLn (titulo "========================================")
-    putStrLn (titulo "   BÚSQUEDA POR RANGO DE FECHAS")
-    putStrLn (titulo "========================================")
+    putStrLn (titulo "\n════════════════════════════════════════")
+    putStrLn (subtitulo "   BÚSQUEDA POR RANGO DE FECHAS")
+    putStrLn (titulo "════════════════════════════════════════")
 
     fechaInicio <- pedirFechaValida "Ingrese fecha de inicio: "
     fechaFin <- pedirFechaValida "Ingrese fecha final: "
 
-    putStrLn (separador "========================================")
+    putStrLn (separador "════════════════════════════════════════")
 
     buscarPorRangoFechas eventosActualizados fechaInicio fechaFin
     cicloMenu rutaArchivo eventosActualizados
@@ -162,9 +163,9 @@ opcionEstadisticas :: FilePath -> [Evento] -> IO ()
 opcionEstadisticas rutaArchivo eventos = do
     eventosActualizados <- actualizarSistema rutaArchivo eventos
 
-    putStrLn (titulo "========================================")
-    putStrLn (titulo "   GENERANDO ESTADÍSTICAS")
-    putStrLn (titulo "========================================")
+    putStrLn (titulo "════════════════════════════════════════")
+    putStrLn (subtitulo "   GENERANDO ESTADÍSTICAS")
+    putStrLn (titulo "════════════════════════════════════════")
 
     _ <- generarEstadisticas eventosActualizados
     cicloMenu rutaArchivo eventosActualizados

@@ -47,7 +47,7 @@ import Core.Promedios
 import Utils.Calculos
 
 import Text.Read (readMaybe)
-import Utils.Colores (titulo)
+import Utils.Colores (titulo, magenta2, subtitulo, opcion)
 
 --------------------------------------------------------------------------------
 -- MENÚ PRINCIPAL
@@ -62,10 +62,10 @@ import Utils.Colores (titulo)
 mostrarBienvenida :: IO ()
 mostrarBienvenida = do
     putStrLn ""
-    putStrLn (separador "========================================")
+    putStrLn (titulo "\n════════════════════════════════════════")
     putStrLn (titulo "        SISTEMA DE EVENTOS")
-    putStrLn (separador "========================================")
-    putStrLn (texto "        Bienvenido al sistema")
+    putStrLn (titulo "════════════════════════════════════════")
+    putStrLn (subtitulo "        Bienvenido al sistema")
     putStrLn ""
 
 --------------------------------------------------------------------------------
@@ -76,9 +76,9 @@ mostrarBienvenida = do
 --------------------------------------------------------------------------------
 mostrarMenu :: IO ()
 mostrarMenu = do
-    putStrLn (separador "========================================")
-    putStrLn (titulo "            MENÚ PRINCIPAL")
-    putStrLn (separador "========================================")
+    putStrLn (separador "\n════════════════════════════════════════")
+    putStrLn (magenta2 "            MENÚ PRINCIPAL")
+    putStrLn (separador "════════════════════════════════════════")
 
     putStrLn (opcion " 1. Transformación de eventos")
     putStrLn (opcion " 2. Análisis de datos")
@@ -87,7 +87,7 @@ mostrarMenu = do
     putStrLn (opcion " 5. Estadísticas")
     putStrLn (opcion " 6. Salir")
 
-    putStrLn (separador "========================================")
+    putStrLn (separador "════════════════════════════════════════")
 
 --------------------------------------------------------------------------------
 -- Nombre: pedirOpcionUsuario
@@ -132,7 +132,7 @@ imprimirTitulo txt = do
 
     where
 
-    linea = "========================================"
+    linea = "════════════════════════════════════════"
 
 --------------------------------------------------------------------------------
 -- Nombre: mostrarMesDiaUI
@@ -143,11 +143,11 @@ imprimirTitulo txt = do
 mostrarMesDiaUI :: String -> Float -> String -> Int -> IO ()
 mostrarMesDiaUI mes monto dia cantidad = do
 
-    imprimirTitulo "MES CON MAYOR MONTO"
+    imprimirTitulo (magenta2 "MES CON MAYOR MONTO")
 
     imprimirLinea (texto (alinearTexto mes 18) ++ " | " ++ okMsg (formatearMonto monto))
 
-    imprimirTitulo "DÍA MÁS ACTIVO"
+    imprimirTitulo (magenta2 "DÍA MÁS ACTIVO")
 
     imprimirLinea (texto (alinearTexto dia 18) ++ " | " ++ okMsg (show cantidad ++ " eventos"))
 
@@ -160,7 +160,7 @@ mostrarMesDiaUI mes monto dia cantidad = do
 mostrarExtremosUI :: Evento -> Evento -> IO ()
 mostrarExtremosUI viejo nuevo = do
 
-    imprimirTitulo "EVENTOS EXTREMOS"
+    imprimirTitulo (magenta2 "EVENTOS EXTREMOS")
 
     mostrarEvento "MÁS ANTIGUO" viejo
 
@@ -175,13 +175,15 @@ mostrarExtremosUI viejo nuevo = do
 mostrarEvento :: String -> Evento -> IO ()
 mostrarEvento tituloEvento evento = do
     imprimirLinea ("\n" ++ separador linea)
-    imprimirLinea (subtitulo ("        " ++ tituloEvento))
+    imprimirLinea (magenta2 ("        " ++ tituloEvento))
     imprimirLinea (separador linea)
 
-    imprimirLinea (texto ("ID    : " ++ show (idEvento evento)))
-    imprimirLinea (texto ("Fecha : " ++ formatearFecha (timestamp evento)))
+    imprimirLinea ( cyan2 "ID    : " ++  texto (show (idEvento evento)))
+
+    imprimirLinea (  cyan2 "Fecha : " ++  texto (formatearFecha (timestamp evento)))
     where
-    linea = "----------------------------------------"
+    
+    linea = "════════════════════════════════════════"
 
 --------------------------------------------------------------------------------
 -- RESUMEN POR INTERVALO
@@ -196,7 +198,7 @@ mostrarEvento tituloEvento evento = do
 imprimirResumenUI :: [(Day, Day, [Evento])] -> IO ()
 imprimirResumenUI grupos = do
     imprimirLinea ("\n" ++ titulo linea)
-    imprimirLinea (titulo "        RESUMEN POR INTERVALO DE DÍAS")
+    imprimirLinea (subtitulo "                 RESUMEN POR INTERVALO DE DÍAS")
     imprimirLinea (titulo linea)
 
     imprimirLinea $
@@ -208,7 +210,7 @@ imprimirResumenUI grupos = do
 
     mapM_ imprimirGrupo grupos
     where
-    linea = "=============================================================="
+    linea = "═════════════════════════════════════════════════════════════════════════════"
 
 --------------------------------------------------------------------------------
 -- Nombre: imprimirGrupoUI
@@ -231,7 +233,7 @@ imprimirGrupo (fechaInicio, fechaFin, eventosGrupo) = do
 
     imprimirLinea $
 
-        texto (ajustarTexto rangoFechas 40) ++ " | " ++
+        opcion (ajustarTexto rangoFechas 40) ++ " | " ++
         texto (ajustarNumero cantidadEventos 8) ++ " | " ++
         okMsg (ajustarTexto (formatearMonto montoTotalGrupo) 18)
 
@@ -355,12 +357,10 @@ mostrarCategoria eventosEtiquetados promedios categoriaActual =
         promedio =   obtenerPromedio categoriaActual promedios
 
     in putStrLn $
-        texto (
-            ajustarTexto (show categoriaActual) 15 ++ " | "
-            ++ ajustarNumero totalCategoria 7 ++ " | "
-            ++ ajustarTexto (formatearMonto promedio) 18 ++ " | "
-            ++ ajustarNumero sobrePromedio 6
-        )
+        ajustarTexto (show categoriaActual) 15 ++ " | "
+        ++ inputMsg (ajustarNumero totalCategoria 7) ++ " | "
+        ++ ajustarTexto (formatearMonto promedio) 18 ++ " | "
+        ++ inputMsg (ajustarNumero sobrePromedio 6)
 
 --------------------------------------------------------------------------------
 -- Nombre: reporteCompleto
@@ -401,9 +401,9 @@ reporteCompleto eventos = do
 --------------------------------------------------------------------------------
 mostrarError :: IO ()
 mostrarError = do
-    putStrLn (titulo "==================================")
+    putStrLn (titulo "══════════════════════════════════════")
     putStrLn (errorMsg "     OPCIÓN INVÁLIDA")
-    putStrLn (titulo "==================================")
+    putStrLn (titulo "══════════════════════════════════════")
     putStrLn ""
 
 
@@ -416,9 +416,9 @@ mostrarError = do
 --------------------------------------------------------------------------------
 mostrarSalidaSistema :: IO ()
 mostrarSalidaSistema = do
-    putStrLn (titulo "==================================")
+    putStrLn (titulo "══════════════════════════════════════")
     putStrLn (okMsg "     SALIENDO DEL SISTEMA")
-    putStrLn (titulo "==================================")
+    putStrLn (titulo "══════════════════════════════════════")
     putStrLn ""
 
 
@@ -432,11 +432,11 @@ mostrarSalidaSistema = do
 mostrarResumenActualizacion :: Int -> IO ()
 mostrarResumenActualizacion cantidadEventosAgregados = do
 
-    putStrLn (titulo "====================================")
+    putStrLn (titulo "══════════════════════════════════════")
     putStrLn (subtitulo "        ACTUALIZACIÓN SISTEMA")
-    putStrLn (titulo "====================================")
+    putStrLn (titulo "══════════════════════════════════════")
     putStrLn (okMsg ("Eventos agregados: " ++ show cantidadEventosAgregados))
-    putStrLn (titulo "====================================")
+    putStrLn (titulo "══════════════════════════════════════")
     putStrLn ""
 
 
@@ -452,11 +452,11 @@ mostrarEstadistica :: [Evento] -> Estadistica -> IO ()
 mostrarEstadistica listaEventos estadistica = do
 
     putStrLn (titulo "\n╔════════════════════════════════════╗")
-    putStrLn (titulo "           ESTADÍSTICAS            ")
+    putStrLn (magenta2 "           ESTADÍSTICAS            ")
     putStrLn (titulo "╚════════════════════════════════════╝")
 
     putStrLn (okMsg ("ID: " ++ show (estId estadistica)))
-    putStrLn (infoMsg ("Fecha consulta: " ++ formatearFecha (fechaConsulta estadistica)))
+    putStrLn (opcion ("Fecha consulta: " ++ formatearFecha (fechaConsulta estadistica)))
 
     putStrLn (subtitulo "\nResumen de categorías:")
     putStrLn (texto (eventosPorCategoria estadistica))
@@ -474,7 +474,7 @@ mostrarEstadistica listaEventos estadistica = do
     putStrLn (rojo ++ "───────────────────────────────────────" ++ reset)
 
     putStrLn (magenta ++ "\n── DÍA MÁS ACTIVO ──────────────────────" ++ reset)
-    putStrLn ("│ " ++ safeFecha diaMasActivo)
+    putStrLn ("│     " ++ safeFecha diaMasActivo)
     putStrLn (magenta ++ "───────────────────────────────────────" ++ reset)
 
     putStrLn (titulo "╚════════════════════════════════════╝")
@@ -522,12 +522,12 @@ safeFecha textoFecha =
 imprimirEncabezado :: String -> String -> IO ()
 imprimirEncabezado fechaInicio fechaFin = do
 
-    putStrLn (titulo "╔══════════════════════════════════════╗")
-    putStrLn (titulo "   BÚSQUEDA POR RANGO DE FECHAS       ")
+    putStrLn (titulo "\n╔══════════════════════════════════════╗")
+    putStrLn (magenta2 "   BÚSQUEDA POR RANGO DE FECHAS       ")
     putStrLn (titulo "╚══════════════════════════════════════╝")
 
-    putStrLn (infoMsg (" Desde: " ++ fechaInicio))
-    putStrLn (infoMsg (" Hasta: " ++ fechaFin))
+    putStrLn (opcion (" Desde: " ++ fechaInicio))
+    putStrLn (opcion (" Hasta: " ++ fechaFin))
 
 --------------------------------------------------------------------------------
 -- Nombre: imprimirTabla
@@ -539,17 +539,17 @@ imprimirEncabezado fechaInicio fechaFin = do
 imprimirTabla :: IO ()
 imprimirTabla = do
 
-    putStrLn (separador "════════════════════════════════════════════════════════════════════")
+    putStrLn (separador "══════════════════════════════════════════════════════════════════════════════════════")
 
     putStrLn (
-        okMsg      (col "FECHA" 12) ++ "|" ++
+        okMsg      (col "FECHA" 18) ++ "|" ++
         okMsg      (col "ID" 8) ++ "|" ++
-        titulo     (col "CATEGORIA" 14) ++ "|" ++
+        titulo     (col "CATEGORIA" 16) ++ "|" ++
         texto      (col "VALOR" 14) ++ "|" ++
         warningMsg (col "CANT" 6) ++ "|" ++
         errorMsg   (col "TOTAL" 14))
 
-    putStrLn (separador "════════════════════════════════════════════════════════════════════")
+    putStrLn (separador "══════════════════════════════════════════════════════════════════════════════════════")
 
 
 --------------------------------------------------------------------------------
@@ -572,14 +572,14 @@ imprimirFila evento = do
                 _          -> titulo
 
     putStrLn (
-        texto        (col (formatearFecha (timestamp evento)) 12) ++ "|" ++
+        texto        (col (formatearFecha (timestamp evento)) 18) ++ "|" ++
         infoMsg      (col (show (idEvento evento)) 8) ++ "|" ++
-        categoriaColor (col (show (categoria evento)) 14) ++ "|" ++
+        categoriaColor (col (show (categoria evento)) 16) ++ "|" ++
         texto        (col (formatearMonto (valor evento)) 14) ++ "|" ++
         warningMsg   (col (show (cantidad evento)) 6) ++ "|" ++
         totalVisual)
 
-    putStrLn (separador "--------------------------------------------------------------------")
+    putStrLn (separador "══════════════════════════════════════════════════════════════════════════════════════")
 --------------------------------------------------------------------------------
 -- Nombre: imprimirResumen
 -- Entrada: lista de eventos
@@ -596,7 +596,7 @@ imprimirResumen eventos = do
 
         montoFinal = sum (map totalAjustado eventosActualizados)
 
-    putStrLn (separador "════════════════════════════════════════════════════════════════════")
+    putStrLn (separador "══════════════════════════════════════════════════════════════════════════════════════")
 
     putStrLn (okMsg (" Total encontrados: " ++ show (length eventos)))
 
@@ -608,9 +608,9 @@ imprimirResumen eventos = do
 
     putStrLn ""
 
-    putStrLn (okMsg (" Monto final de ganancias : " ++ formatearMonto montoFinal))
+    putStrLn (magenta2 (" Monto final de ganancias : " ++ formatearMonto montoFinal))
 
-    putStrLn (separador "════════════════════════════════════════════════════════════════════")
+    putStrLn (separador "══════════════════════════════════════════════════════════════════════════════════════")
 
 --------------------------------------------------------------------------------
 -- Nombre: mostrarPromedioCategoria

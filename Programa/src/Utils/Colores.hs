@@ -40,6 +40,11 @@ rojo = "\ESC[31m"
 verde :: String
 verde = "\ESC[32m"
 
+magenta2 :: String -> String
+magenta2 txt = "\ESC[35m" ++ txt ++ "\ESC[0m"
+
+cyan2 :: String -> String
+cyan2 txt = "\ESC[36m" ++ txt ++ "\ESC[0m"
 --------------------------------------------------------------------------------
 -- Nombre: amarillo
 -- Entrada:

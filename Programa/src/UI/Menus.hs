@@ -14,6 +14,7 @@ import Services.Analisis.PromedioCategoriaAnio
 import UI.Interfaz
 import Utils.Colores
 import System.IO 
+import Utils.Colores (subtitulo)
 
 --------------------------------------------------------------------------------
 -- MENU: TRANSFORMACIÓN DE EVENTOS
@@ -29,15 +30,15 @@ import System.IO
 menuTransformacion :: [Evento] -> IO [Evento]
 menuTransformacion eventos = do
 
-    putStrLn (separador "==================================")
-    putStrLn (titulo "   TRANSFORMACIÓN DE EVENTOS")
-    putStrLn (separador "==================================")
+    putStrLn (separador "\n══════════════════════════════════════")
+    putStrLn (titulo "    TRANSFORMACIÓN DE EVENTOS")
+    putStrLn (separador "══════════════════════════════════════")
 
     putStrLn (opcion "1. Aplicar impuestos + etiquetas")
     putStrLn (opcion "2. Solo impuestos")
     putStrLn (opcion "3. Solo etiquetas")
 
-    putStrLn (separador "==================================")
+    putStrLn (separador "══════════════════════════════════════")
     putStrLn (inputMsg "Seleccione una opción:")
     opcionUsuario <- getLine
 
@@ -87,14 +88,14 @@ menuTransformacion eventos = do
 menuAnalisis :: FilePath -> [Evento] -> IO ()
 menuAnalisis _ eventos = do
 
-    putStrLn (titulo "\n================================")
-    putStrLn (titulo "      ANÁLISIS DE DATOS")
-    putStrLn (titulo "================================")
+    putStrLn (titulo "\n══════════════════════════════════════")
+    putStrLn (subtitulo "      ANÁLISIS DE DATOS")
+    putStrLn (titulo "══════════════════════════════════════")
 
     putStrLn (opcion "1. Monto total")
     putStrLn (opcion "2. Promedio por categoría por año")
 
-    putStrLn (titulo "================================")
+    putStrLn (titulo "══════════════════════════════════════")
     putStrLn (inputMsg "Seleccione una opción: ")
 
     opcionUsuario <- getLine
@@ -119,16 +120,16 @@ menuAnalisis _ eventos = do
 menuAnalisisTemporal :: FilePath -> [Evento] -> IO ()
 menuAnalisisTemporal ruta eventos = do
 
-    putStrLn (separador "\n========================================")
+    putStrLn (separador "\n══════════════════════════════════════")
     putStrLn (titulo "        ANÁLISIS TEMPORAL")
-    putStrLn (separador "========================================")
+    putStrLn (separador "══════════════════════════════════════")
 
     putStrLn (opcion "1. Mes y día más activo")
     putStrLn (opcion "2. Eventos extremos")
     putStrLn (opcion "3. Resumen por intervalo de días")
     putStrLn (warningMsg "4. Salir")
 
-    putStrLn (separador "========================================")
+    putStrLn (separador "══════════════════════════════════════")
     putStr (inputMsg "Seleccione una opción: ")
     hFlush stdout
 

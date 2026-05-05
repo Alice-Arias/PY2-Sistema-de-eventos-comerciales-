@@ -36,20 +36,20 @@ montoTotal eventos = do
 
         cantidadComprasSinImpuesto = length comprasSinImpuesto
 
-    putStrLn (titulo "\n========================================")
-    putStrLn (titulo "            MONTO TOTAL")
-    putStrLn (titulo "========================================")
+    putStrLn (titulo "\n════════════════════════════════════════")
+    putStrLn (magenta2 "            MONTO TOTAL")
+    putStrLn (titulo "════════════════════════════════════════")
 
     putStrLn (subtitulo " RESUMEN GENERAL")
-    putStrLn (separador "----------------------------------------")
+    putStrLn (separador "════════════════════════════════════════")
 
     putStrLn (texto "  Dinero registrado   : " ++ okMsg (formatearMonto dineroTotalSistema))
     putStrLn (texto "  Devoluciones        : " ++ warningMsg (formatearMonto dineroPerdidoDevoluciones))
 
-    putStrLn (separador "----------------------------------------")
+    putStrLn (separador "════════════════════════════════════════")
 
     putStrLn (subtitulo " ESTADO DE IMPUESTOS")
-    putStrLn (separador "----------------------------------------")
+    putStrLn (separador "════════════════════════════════════════")
 
     if cantidadComprasSinImpuesto > 0
         then do
@@ -59,22 +59,22 @@ montoTotal eventos = do
             putStrLn (okMsg "  Todos los impuestos están correctos")
             putStrLn (okMsg "  Sistema consistente")
 
-    putStrLn (separador "----------------------------------------")
+    putStrLn (separador "════════════════════════════════════════")
 
     putStrLn (subtitulo " EVENTOS SIN IMPUESTO")
-    putStrLn (separador "----------------------------------------")
+    putStrLn (separador "════════════════════════════════════════")
 
     if null comprasSinImpuesto
         then putStrLn (texto "  No hay compras pendientes.")
         else mapM_ mostrarEvento comprasSinImpuesto
 
-    putStrLn (titulo "========================================")
+    putStrLn (titulo "════════════════════════════════════════")
     putStrLn (subtitulo " TOTAL FINAL DEL SISTEMA ")
-    putStrLn (titulo "========================================")
+    putStrLn (titulo "════════════════════════════════════════")
 
     putStrLn (okMsg ("  " ++ formatearMonto dineroFinalSistema))
 
-    putStrLn (titulo "========================================")
+    putStrLn (titulo "════════════════════════════════════════")
 
 --------------------------------------------------------------------------------
 -- Nombre: calcularTotalCorrecto
@@ -128,4 +128,4 @@ mostrarEvento evento = do
     putStrLn (texto "   Impuesto         : " ++ warningMsg (formatearMonto impuestoCalculado))
     putStrLn (texto "   Total            : " ++ okMsg (formatearMonto totalCalculado))
 
-    putStrLn (separador "----------------------------------------")
+    putStrLn (separador "════════════════════════════════════════")
