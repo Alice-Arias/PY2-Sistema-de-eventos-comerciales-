@@ -25,12 +25,22 @@ import UI.Interfaz
 --   - las fechas deben cumplir el formato dd-mm-yyyy
 --   - si el formato es inválido, se muestra un mensaje de error
 --------------------------------------------------------------------------------
+
 buscarPorRangoFechas :: [Evento] -> String -> String -> IO ()
-buscarPorRangoFechas eventos textoFechaInicio textoFechaFin =
+buscarPorRangoFechas eventos textoInicio textoFin =
 
-    case (parseFecha textoFechaInicio, parseFecha textoFechaFin) of
+    case (parseFecha textoInicio, parseFecha textoFin) of
 
-        (Just fechaInicio, Just fechaFin) -> procesarBusquedaPorFechas eventos fechaInicio fechaFin textoFechaInicio textoFechaFin
+        (Just inicio, Just fin) ->
+            if fin < inicio
+
+                then putStrLn (errorMsg "La fecha de fin no puede ser menor que la de inicio")
+
+                else do
+                    let filtrados = filtrarEventosEnRango eventos inicio fin
+
+                    -- aquí muestras los resultados
+                    print filtrados
 
         _ ->
             putStrLn (errorMsg "Fechas inválidas. Usa formato dd-mm-yyyy")
